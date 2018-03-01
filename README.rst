@@ -27,10 +27,13 @@ run fetched from the local environment.
 Installation
 ------------
 
-You can install "pytest-rpc" via `pip`_ from `PyPI`_::
+You can install "pytest-rpc" via `pip`_ from `PyPI`_ (when it is published)::
 
     $ pip install pytest-rpc
 
+Or you can install "pytest-rpc" from disk via`pip`_ (assumes you're in the root of the repo)::
+
+    $ pip install -e .
 
 Usage
 -----
