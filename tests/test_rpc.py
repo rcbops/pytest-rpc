@@ -87,44 +87,154 @@ def assert_attr(node, **kwargs):
 # ======================================================================================================================
 # Tests
 # ======================================================================================================================
-def test_no_env_vars_set(testdir):
-    """Make sure that pytest accepts our fixture without setting any environment variables."""
+class TestTestSuiteXMLProperties(object):
+    """Test cases for the 'pytest_runtestloop' hook function for collecting environment variables"""
 
-    # Setup
-    testdir.makepyfile("""
-                import pytest
-                def test_pass():
-                    pass
-    """)
+    def test_no_env_vars_set(self, testdir):
+        """Verify that pytest accepts our fixture without setting any environment variables."""
 
-    result, dom = runandparse(testdir)
+        # Setup
+        testdir.makepyfile("""
+                    import pytest
+                    def test_pass():
+                        pass
+        """)
 
-    # Test
-    assert result.ret == 0
-    dom.find_first_by_tag("testsuite").assert_attr(name="pytest", errors=0, failures=0, skips=0, tests=1)
+        result, dom = runandparse(testdir)
 
-    for i in range(len(ENV_VARS)):
-        dom.find_nth_by_tag('property', i).assert_attr(name=ENV_VARS[i], value='Unknown')
+        # Test
+        assert result.ret == 0
+        dom.find_first_by_tag("testsuite").assert_attr(name="pytest", errors=0, failures=0, skips=0, tests=1)
+
+        for i in range(len(ENV_VARS)):
+            dom.find_nth_by_tag('property', i).assert_attr(name=ENV_VARS[i], value='Unknown')
+
+    def test_env_vars_set(self, testdir):
+        """Verify that pytest accepts our fixture with all relevant environment variables set."""
+
+        # Setup
+        testdir.makepyfile("""
+                    import pytest
+                    def test_pass():
+                        pass
+        """)
+
+        for env in ENV_VARS:
+            os.environ[env] = env
+
+        result, dom = runandparse(testdir)
+
+        # Test
+        assert result.ret == 0
+        dom.find_first_by_tag("testsuite").assert_attr(name="pytest", errors=0, failures=0, skips=0, tests=1)
+
+        for i in range(len(ENV_VARS)):
+            dom.find_nth_by_tag('property', i).assert_attr(name=ENV_VARS[i], value=ENV_VARS[i])
 
 
-def test_env_vars_set(testdir):
-    """Make sure that pytest accepts our fixture with all relevant environment variables set."""
+class TestTestCaseXMLProperties(object):
+    """Test cases for the 'pytest_collection_modifyitems' hook function for recording the UUID for test cases."""
 
-    # Setup
-    testdir.makepyfile("""
-                import pytest
-                def test_pass():
-                    pass
-    """)
+    def test_uuid_mark_present(self, testdir):
+        """Verify that 'test_id' property element is present when a test is decorated with a UUID mark."""
 
-    for env in ENV_VARS:
-        os.environ[env] = env
+        # Expect
+        test_id = '123e4567-e89b-12d3-a456-426655440000'
+        test_name = 'test_uuid'
 
-    result, dom = runandparse(testdir)
+        # Setup
+        testdir.makepyfile("""
+                    import pytest
+                    @pytest.mark.test_id('{}')
+                    def {}():
+                        pass
+        """.format(test_id, test_name))
 
-    # Test
-    assert result.ret == 0
-    dom.find_first_by_tag("testsuite").assert_attr(name="pytest", errors=0, failures=0, skips=0, tests=1)
+        result, dom = runandparse(testdir)
+        test_case = dom.find_first_by_tag('testcase')
 
-    for i in range(len(ENV_VARS)):
-        dom.find_nth_by_tag('property', i).assert_attr(name=ENV_VARS[i], value=ENV_VARS[i])
+        # Test
+        assert result.ret == 0
+
+        test_case.assert_attr(name=test_name)
+        test_case.find_first_by_tag('property').assert_attr(name='test_id', value=test_id)
+
+    def test_multiple_uuid_marks(self, testdir):
+        """Verify that 'test_id' property element is present when a test is decorated with multiple UUID marks.
+        The plug-in will choose the bottom-most decorator for the 'test_id'. Note: we DO NOT want to cause the test
+        run to fail in this scenario.
+        """
+
+        # Expect
+        test_id1 = 'first'
+        test_id2 = 'second'
+        test_name = 'test_uuid'
+
+        # Setup
+        testdir.makepyfile("""
+                    import pytest
+                    @pytest.mark.test_id('{}')
+                    @pytest.mark.test_id('{}')
+                    def {}():
+                        pass
+        """.format(test_id1, test_id2, test_name))
+
+        result, dom = runandparse(testdir)
+        test_case = dom.find_first_by_tag('testcase')
+
+        # Test
+        assert result.ret == 0
+
+        test_case.assert_attr(name=test_name)
+        test_case.find_first_by_tag('property').assert_attr(name='test_id', value=test_id2)
+
+    def test_multiple_test_cases_with_uuid_mark_present(self, testdir):
+        """Verify that 'test_id' property element is present when multiple tests are decorated with a UUID mark."""
+
+        # Expect
+        test_ids = ['first', 'second']
+        test_names = ['test_uuid1', 'test_uuid2']
+
+        # Setup
+        testdir.makepyfile("""
+                    import pytest
+                    @pytest.mark.test_id('{}')
+                    def {}():
+                        pass
+
+                    @pytest.mark.test_id('{}')
+                    def {}():
+                        pass
+        """.format(test_ids[0], test_names[0], test_ids[1], test_names[1]))
+
+        result, dom = runandparse(testdir)
+        test_cases = dom.find_by_tag('testcase')
+
+        # Test
+        assert result.ret == 0
+
+        for i in range(len(test_cases)):
+            test_cases[i].assert_attr(name=test_names[i])
+            test_cases[i].find_first_by_tag('property').assert_attr(name='test_id', value=test_ids[i])
+
+    def test_missing_uuid_marks(self, testdir):
+        """Verify that 'test_id' property element is absent when a test is NOT decorated with a UUID mark."""
+
+        # Expect
+        test_name = 'test_no_uuid'
+
+        # Setup
+        testdir.makepyfile("""
+                    import pytest
+                    def {}():
+                        pass
+        """.format(test_name))
+
+        result, dom = runandparse(testdir)
+        test_case = dom.find_first_by_tag('testcase')
+
+        # Test
+        assert result.ret == 0
+
+        test_case.assert_attr(name=test_name)
+        assert test_case.find_first_by_tag('property') is None
