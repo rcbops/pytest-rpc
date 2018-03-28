@@ -39,13 +39,10 @@ def pytest_runtestloop(session):
                     junit_xml_config.add_global_property(env_var, os.getenv(env_var, 'Unknown'))
 
 
-@pytest.hookimpl(trylast=True)
-def pytest_collection_modifyitems(session, config, items):
+def pytest_collection_modifyitems(items):
     """Add XML properties group to each 'testcase' element that captures the UUID for the pytest mark 'test_id'.
 
     Args:
-        session (_pytest.main.Session): The pytest session object.
-        config (_pytest.config.Config): The pytest config object.
         items (list(_pytest.nodes.Item)): List of item objects.
     """
 
