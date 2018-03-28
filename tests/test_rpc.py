@@ -87,44 +87,74 @@ def assert_attr(node, **kwargs):
 # ======================================================================================================================
 # Tests
 # ======================================================================================================================
-def test_no_env_vars_set(testdir):
-    """Make sure that pytest accepts our fixture without setting any environment variables."""
+class TestTestSuiteXMLProperties(object):
+    """Test cases for the 'pytest_runtestloop' hook function for collecting environment variables"""
 
-    # Setup
-    testdir.makepyfile("""
-                import pytest
-                def test_pass():
-                    pass
-    """)
+    def test_no_env_vars_set(self, testdir):
+        """Make sure that pytest accepts our fixture without setting any environment variables."""
 
-    result, dom = runandparse(testdir)
+        # Setup
+        testdir.makepyfile("""
+                    import pytest
+                    def test_pass():
+                        pass
+        """)
 
-    # Test
-    assert result.ret == 0
-    dom.find_first_by_tag("testsuite").assert_attr(name="pytest", errors=0, failures=0, skips=0, tests=1)
+        result, dom = runandparse(testdir)
 
-    for i in range(len(ENV_VARS)):
-        dom.find_nth_by_tag('property', i).assert_attr(name=ENV_VARS[i], value='Unknown')
+        # Test
+        assert result.ret == 0
+        dom.find_first_by_tag("testsuite").assert_attr(name="pytest", errors=0, failures=0, skips=0, tests=1)
+
+        for i in range(len(ENV_VARS)):
+            dom.find_nth_by_tag('property', i).assert_attr(name=ENV_VARS[i], value='Unknown')
+
+    def test_env_vars_set(self, testdir):
+        """Make sure that pytest accepts our fixture with all relevant environment variables set."""
+
+        # Setup
+        testdir.makepyfile("""
+                    import pytest
+                    def test_pass():
+                        pass
+        """)
+
+        for env in ENV_VARS:
+            os.environ[env] = env
+
+        result, dom = runandparse(testdir)
+
+        # Test
+        assert result.ret == 0
+        dom.find_first_by_tag("testsuite").assert_attr(name="pytest", errors=0, failures=0, skips=0, tests=1)
+
+        for i in range(len(ENV_VARS)):
+            dom.find_nth_by_tag('property', i).assert_attr(name=ENV_VARS[i], value=ENV_VARS[i])
 
 
-def test_env_vars_set(testdir):
-    """Make sure that pytest accepts our fixture with all relevant environment variables set."""
+class TestTestCaseXMLProperties(object):
+    """Test cases for the 'pytest_collection_modifyitems' hook function for recording the UUID for test cases."""
 
-    # Setup
-    testdir.makepyfile("""
-                import pytest
-                def test_pass():
-                    pass
-    """)
+    def test_uuid_mark_present(self, testdir):
+        """Make sure that pytest accepts our fixture without setting any environment variables."""
 
-    for env in ENV_VARS:
-        os.environ[env] = env
+        # Expect
+        test_id = '123e4567-e89b-12d3-a456-426655440000'
+        test_name = 'test_uuid'
 
-    result, dom = runandparse(testdir)
+        # Setup
+        testdir.makepyfile("""
+                    import pytest
+                    @pytest.mark.test_id('{}')
+                    def {}():
+                        pass
+        """.format(test_id, test_name))
 
-    # Test
-    assert result.ret == 0
-    dom.find_first_by_tag("testsuite").assert_attr(name="pytest", errors=0, failures=0, skips=0, tests=1)
+        result, dom = runandparse(testdir)
+        test_case = dom.find_first_by_tag('testcase')
 
-    for i in range(len(ENV_VARS)):
-        dom.find_nth_by_tag('property', i).assert_attr(name=ENV_VARS[i], value=ENV_VARS[i])
+        # Test
+        assert result.ret == 0
+
+        test_case.assert_attr(name=test_name)
+        test_case.find_first_by_tag('property').assert_attr(name='test_id', value=test_id)

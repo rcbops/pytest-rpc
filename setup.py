@@ -13,7 +13,7 @@ def read(fname):
 
 setup(
     name='pytest-rpc',
-    version='0.1.0',
+    version='0.2.0',
     author='rcbops',
     author_email='rcb-deploy@lists.rackspace.com',
     maintainer='rcbops',
@@ -23,7 +23,7 @@ setup(
     description='Extend py.test for RPC OpenStack testing.',
     long_description=read('README.rst'),
     py_modules=['pytest_rpc'],
-    install_requires=['pytest>=3.1.1'],
+    install_requires=['pytest>=3.5.0'],
     classifiers=[
         'Development Status :: 4 - Beta',
         'Framework :: Pytest',
