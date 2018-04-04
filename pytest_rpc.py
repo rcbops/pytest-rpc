@@ -9,15 +9,18 @@ import pytest
 # ======================================================================================================================
 # Globals
 # ======================================================================================================================
-ENV_VARS = ['JENKINS_CONSOLE_LOG_URL',
-            'SCENARIO',
-            'ACTION',
-            'IMAGE',
+ENV_VARS = ['BUILD_URL',
+            'BUILD_NUMBER',
+            'RE_JOB_ACTION',
+            'RE_JOB_IMAGE',
+            'RE_JOB_SCENARIO',
+            'RE_JOB_BRANCH',
+            'RPC_RELEASE',
+            'RPC_PRODUCT_RELEASE',
             'OS_ARTIFACT_SHA',
             'PYTHON_ARTIFACT_SHA',
             'APT_ARTIFACT_SHA',
-            'GIT_REPO',
-            'GIT_BRANCH']
+            'REPO_URL']
 
 
 # ======================================================================================================================
