@@ -13,7 +13,7 @@ def read(fname):
 
 setup(
     name='pytest-rpc',
-    version='0.2.0',
+    version='0.3.0',
     author='rcbops',
     author_email='rcb-deploy@lists.rackspace.com',
     maintainer='rcbops',
