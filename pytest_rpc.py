@@ -4,7 +4,9 @@
 # ======================================================================================================================
 import os
 import pytest
+import pkg_resources
 from datetime import datetime
+
 
 # ======================================================================================================================
 # Globals
@@ -61,18 +63,28 @@ def pytest_runtest_setup(item):
     """Add XML properties group to the 'testcase' element that captures start time in UTC.
 
     Args:
-        items (list(_pytest.nodes.Item)): List of item objects.
+        item (_pytest.nodes.Item): An item object.
     """
     now = datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ')
     item.user_properties.append(('start_time', now))
 
 
 @pytest.hookimpl(trylast=True)
-def pytest_runtest_teardown(item, nextitem):
+def pytest_runtest_teardown(item):
     """Add XML properties group to the 'testcase' element that captures start time in UTC.
 
     Args:
-        items (list(_pytest.nodes.Item)): List of item objects.
+        item (_pytest.nodes.Item): An item object.
     """
     now = datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ')
     item.user_properties.append(('end_time', now))
+
+
+def get_xsd():
+    """Retrieve a XSD for validating JUnitXML results produced by this plug-in.
+
+    Returns:
+        io.BytesIO: A file like stream object.
+    """
+
+    return pkg_resources.resource_stream('pytest_rpc', 'data/molecule_junit.xsd')
