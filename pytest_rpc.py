@@ -4,7 +4,7 @@
 # ======================================================================================================================
 import os
 import pytest
-
+from datetime import datetime
 
 # ======================================================================================================================
 # Globals
@@ -54,3 +54,25 @@ def pytest_collection_modifyitems(items):
         if marker is not None:
             test_id = marker.args[0]
             item.user_properties.append(('test_id', test_id))
+
+
+@pytest.hookimpl(tryfirst=True)
+def pytest_runtest_setup(item):
+    """Add XML properties group to the 'testcase' element that captures start time in UTC.
+
+    Args:
+        items (list(_pytest.nodes.Item)): List of item objects.
+    """
+    now = datetime.utcnow()
+    item.user_properties.append(('start_time', str(now)))
+
+
+@pytest.hookimpl(trylast=True)
+def pytest_runtest_teardown(item, nextitem):
+    """Add XML properties group to the 'testcase' element that captures start time in UTC.
+
+    Args:
+        items (list(_pytest.nodes.Item)): List of item objects.
+    """
+    now = datetime.utcnow()
+    item.user_properties.append(('end_time', str(now)))
