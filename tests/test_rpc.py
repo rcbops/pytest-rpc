@@ -3,9 +3,9 @@
 # Imports
 # ======================================================================================================================
 import os
+from lxml import etree
 from xml.dom import minidom
-from pytest_rpc import ENV_VARS
-
+from pytest_rpc import ENV_VARS, get_xsd
 from dateutil import parser as date_parser
 
 # ======================================================================================================================
@@ -337,3 +337,211 @@ class TestTestCaseXMLProperties(object):
         end = date_parser.parse(str(test_case.get_property_value('end_time')))
         delta = end - start
         assert delta.seconds == sleep_seconds
+
+
+class TestXsd(object):
+    """Test cases for the 'get_xsd' utility function for retrieving the XSD for the project."""
+
+    def test_happy_path(self, testdir):
+        """Verify that 'get_xsd' returns an XSD stream that can be used to validate JUnitXML."""
+
+        # Setup
+        testdir.makepyfile("""
+                    import pytest
+                    @pytest.mark.test_id('123e4567-e89b-12d3-a456-426655440000')
+                    def test_xsd():
+                        pass
+        """)
+
+        resultpath = testdir.tmpdir.join('junit.xml')
+        result = testdir.runpytest("--junitxml={}".format(resultpath))
+
+        xml_doc = etree.parse(str(resultpath))
+        xmlschema = etree.XMLSchema(etree.parse(get_xsd()))
+
+        # Test
+        assert result.ret == 0
+        xmlschema.assertValid(xml_doc)
+
+    def test_missing_global_property(self, testdir, mocker):
+        """Verify that XSD will enforce the presence of all required global test suite properties."""
+
+        # Mock
+        # Missing 'BUILD_URL'
+        mock_env_vars = ['BUILD_NUMBER',
+                         'RE_JOB_ACTION',
+                         'RE_JOB_IMAGE',
+                         'RE_JOB_SCENARIO',
+                         'RE_JOB_BRANCH',
+                         'RPC_RELEASE',
+                         'RPC_PRODUCT_RELEASE',
+                         'OS_ARTIFACT_SHA',
+                         'PYTHON_ARTIFACT_SHA',
+                         'APT_ARTIFACT_SHA',
+                         'REPO_URL']
+
+        mocker.patch('pytest_rpc.ENV_VARS', mock_env_vars)
+
+        # Setup
+        testdir.makepyfile("""
+                    import pytest
+                    @pytest.mark.test_id('123e4567-e89b-12d3-a456-426655440000')
+                    def test_missing_global_property():
+                        pass
+        """)
+
+        resultpath = testdir.tmpdir.join('junit.xml')
+        result = testdir.runpytest("--junitxml={}".format(resultpath))
+
+        xml_doc = etree.parse(str(resultpath))
+        xmlschema = etree.XMLSchema(etree.parse(get_xsd()))
+
+        # Test
+        assert result.ret == 0
+        assert xmlschema.validate(xml_doc) is False
+
+    def test_extra_global_property(self, testdir, mocker):
+        """Verify that XSD will enforce the strict presence of only required global test suite properties."""
+
+        # Mock
+        # Extra 'BUILD_URL'
+        mock_env_vars = ['BUILD_URL',
+                         'BUILD_URL',
+                         'BUILD_NUMBER',
+                         'RE_JOB_ACTION',
+                         'RE_JOB_IMAGE',
+                         'RE_JOB_SCENARIO',
+                         'RE_JOB_BRANCH',
+                         'RPC_RELEASE',
+                         'RPC_PRODUCT_RELEASE',
+                         'OS_ARTIFACT_SHA',
+                         'PYTHON_ARTIFACT_SHA',
+                         'APT_ARTIFACT_SHA',
+                         'REPO_URL']
+
+        mocker.patch('pytest_rpc.ENV_VARS', mock_env_vars)
+
+        # Setup
+        testdir.makepyfile("""
+                    import pytest
+                    @pytest.mark.test_id('123e4567-e89b-12d3-a456-426655440000')
+                    def test_missing_global_property():
+                        pass
+        """)
+
+        resultpath = testdir.tmpdir.join('junit.xml')
+        result = testdir.runpytest("--junitxml={}".format(resultpath))
+
+        xml_doc = etree.parse(str(resultpath))
+        xmlschema = etree.XMLSchema(etree.parse(get_xsd()))
+
+        # Test
+        assert result.ret == 0
+        assert xmlschema.validate(xml_doc) is False
+
+    def test_typo_global_property(self, testdir, mocker):
+        """Verify that XSD will enforce the only certain property names are allowed for the test suite."""
+
+        # Mock
+        # Typo for RPC_RELEASE
+        mock_env_vars = ['BUILD_URL',
+                         'BUILD_NUMBER',
+                         'RE_JOB_ACTION',
+                         'RE_JOB_IMAGE',
+                         'RE_JOB_SCENARIO',
+                         'RE_JOB_BRANCH',
+                         'RPC_RELAESE',
+                         'RPC_PRODUCT_RELEASE',
+                         'OS_ARTIFACT_SHA',
+                         'PYTHON_ARTIFACT_SHA',
+                         'APT_ARTIFACT_SHA',
+                         'REPO_URL']
+
+        mocker.patch('pytest_rpc.ENV_VARS', mock_env_vars)
+
+        # Setup
+        testdir.makepyfile("""
+                    import pytest
+                    @pytest.mark.test_id('123e4567-e89b-12d3-a456-426655440000')
+                    def test_missing_global_property():
+                        pass
+        """)
+
+        resultpath = testdir.tmpdir.join('junit.xml')
+        result = testdir.runpytest("--junitxml={}".format(resultpath))
+
+        xml_doc = etree.parse(str(resultpath))
+        xmlschema = etree.XMLSchema(etree.parse(get_xsd()))
+
+        # Test
+        assert result.ret == 0
+        assert xmlschema.validate(xml_doc) is False
+
+    def test_missing_uuid(self, testdir):
+        """Verify that XSD will enforce the presence of "test_id" property for test cases."""
+
+        # Setup
+        testdir.makepyfile("""
+                    import pytest
+                    def test_missing_uuid():
+                        pass
+        """)
+
+        resultpath = testdir.tmpdir.join('junit.xml')
+        result = testdir.runpytest("--junitxml={}".format(resultpath))
+
+        xml_doc = etree.parse(str(resultpath))
+        xmlschema = etree.XMLSchema(etree.parse(get_xsd()))
+
+        # Test
+        assert result.ret == 0
+        assert xmlschema.validate(xml_doc) is False
+
+    def test_extra_testcase_property(self, testdir):
+        """Verify that XSD will enforce the strict presence of only required test case properties."""
+
+        # Setup
+        testdir.makepyfile("""
+                    import pytest
+                    @pytest.mark.test_id('123e4567-e89b-12d3-a456-426655440000')
+                    def test_extra_mark():
+                        pass
+        """)
+
+        resultpath = testdir.tmpdir.join('junit.xml')
+        result = testdir.runpytest("--junitxml={}".format(resultpath))
+
+        # Add another property element for the testcase.
+
+        xml_doc = etree.parse(str(resultpath))
+        xml_doc.getroot().find('./testcase/properties').append(etree.Element('property',
+                                                                             attrib={'name': 'extra', 'value': 'fail'}))
+        xmlschema = etree.XMLSchema(etree.parse(get_xsd()))
+
+        # Test
+        assert result.ret == 0
+        assert xmlschema.validate(xml_doc) is False
+
+    def test_typo_property(self, testdir):
+        """Verify that XSD will enforce the only certain property names are allowed for the testcase."""
+
+        # Setup
+        testdir.makepyfile("""
+                    import pytest
+                    @pytest.mark.test_id('123e4567-e89b-12d3-a456-426655440000')
+                    def test_extra_mark():
+                        pass
+        """)
+
+        resultpath = testdir.tmpdir.join('junit.xml')
+        result = testdir.runpytest("--junitxml={}".format(resultpath))
+
+        # Add another property element for the testcase.
+
+        xml_doc = etree.parse(str(resultpath))
+        xml_doc.getroot().find('./testcase/properties/property').attrib['name'] = 'wrong_test_id'
+        xmlschema = etree.XMLSchema(etree.parse(get_xsd()))
+
+        # Test
+        assert result.ret == 0
+        assert xmlschema.validate(xml_doc) is False

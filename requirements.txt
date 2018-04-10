@@ -1,4 +1,9 @@
 tox
 flake8
-pytest
 python-dateutil
+pytest
+pytest-runner
+pytest-mock
+lxml
+setuptools
+ipython
