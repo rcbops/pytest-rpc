@@ -6,7 +6,7 @@ import os
 from xml.dom import minidom
 from pytest_rpc import ENV_VARS
 
-from dateutil import parser
+from dateutil import parser as date_parser
 
 # ======================================================================================================================
 # Classes
@@ -50,12 +50,6 @@ class DomNode(object):
     def assert_attr(self, **kwargs):
         __tracebackhide__ = True
         return assert_attr(self.__node, **kwargs)
-
-    def assert_property_present(self, name):
-        assert property_present(self, name)
-
-    def assert_property_absent(self, name):
-        assert not property_present(self, name)
 
     def get_property_value(self, name):
         for property in self.find_by_tag('property'):
@@ -266,7 +260,7 @@ class TestTestCaseXMLProperties(object):
         assert result.ret == 0
 
         test_case.assert_attr(name=test_name)
-        test_case.assert_property_absent('test_id')
+        assert not property_present(test_case, 'test_id')
 
     def test_start_time(self, testdir):
         """Verify that 'start_time' property element is present."""
@@ -289,7 +283,7 @@ class TestTestCaseXMLProperties(object):
         assert result.ret == 0
 
         test_case.assert_attr(name=test_name)
-        test_case.assert_property_present('start_time')
+        assert property_present(test_case, 'start_time')
 
     def test_end_time(self, testdir):
         """Verify that 'end_time' property element is present."""
@@ -312,7 +306,7 @@ class TestTestCaseXMLProperties(object):
         assert result.ret == 0
 
         test_case.assert_attr(name=test_name)
-        test_case.assert_property_present('end_time')
+        assert property_present(test_case, 'end_time')
 
     def test_accurate_test_time(self, testdir):
         """Verify that '*_time' properties element are accurate."""
@@ -336,10 +330,10 @@ class TestTestCaseXMLProperties(object):
         assert result.ret == 0
 
         test_case.assert_attr(name=test_name)
-        test_case.assert_property_present('start_time')
-        test_case.assert_property_present('end_time')
+        assert property_present(test_case, 'start_time')
+        assert property_present(test_case, 'end_time')
 
-        start = parser.parse(str(test_case.get_property_value('start_time')))
-        end = parser.parse(str(test_case.get_property_value('end_time')))
+        start = date_parser.parse(str(test_case.get_property_value('start_time')))
+        end = date_parser.parse(str(test_case.get_property_value('end_time')))
         delta = end - start
         assert delta.seconds == sleep_seconds

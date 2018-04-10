@@ -63,8 +63,8 @@ def pytest_runtest_setup(item):
     Args:
         items (list(_pytest.nodes.Item)): List of item objects.
     """
-    now = datetime.utcnow()
-    item.user_properties.append(('start_time', str(now)))
+    now = datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ')
+    item.user_properties.append(('start_time', now))
 
 
 @pytest.hookimpl(trylast=True)
@@ -74,5 +74,5 @@ def pytest_runtest_teardown(item, nextitem):
     Args:
         items (list(_pytest.nodes.Item)): List of item objects.
     """
-    now = datetime.utcnow()
-    item.user_properties.append(('end_time', str(now)))
+    now = datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ')
+    item.user_properties.append(('end_time', now))
