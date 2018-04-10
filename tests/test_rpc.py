@@ -6,16 +6,22 @@ import os
 from xml.dom import minidom
 from pytest_rpc import ENV_VARS
 
+from dateutil import parser as date_parser
 
 # ======================================================================================================================
 # Classes
 # ======================================================================================================================
+
+
 class DomNode(object):
     def __init__(self, dom):
         self.__node = dom
 
     def __repr__(self):
         return self.__node.toxml()
+
+    def node(self):
+        return self.__node
 
     def find_first_by_tag(self, tag):
         return self.find_nth_by_tag(tag, 0)
@@ -44,6 +50,13 @@ class DomNode(object):
     def assert_attr(self, **kwargs):
         __tracebackhide__ = True
         return assert_attr(self.__node, **kwargs)
+
+    def get_property_value(self, name):
+        for property in self.find_by_tag('property'):
+            element = property.node()
+            n = element.getAttributeNode('name').value
+            if n == name:
+                return element.getAttributeNode('value').value
 
     def toxml(self):
         return self.__node.toxml()
@@ -82,6 +95,16 @@ def assert_attr(node, **kwargs):
     expected = dict((name, str(value)) for name, value in kwargs.items())
     on_node = dict((name, nodeval(node, name)) for name in expected)
     assert on_node == expected
+
+
+def property_present(node, name):
+    present = False
+    for property in node.find_by_tag('property'):
+        element = property.node()
+        n = element.getAttributeNode('name').value
+        if n == name:
+            present = True
+    return present
 
 
 # ======================================================================================================================
@@ -237,4 +260,80 @@ class TestTestCaseXMLProperties(object):
         assert result.ret == 0
 
         test_case.assert_attr(name=test_name)
-        assert test_case.find_first_by_tag('property') is None
+        assert not property_present(test_case, 'test_id')
+
+    def test_start_time(self, testdir):
+        """Verify that 'start_time' property element is present."""
+
+        # Expect
+        test_name = 'test_i_can_has_start_time'
+
+        # Setup
+        testdir.makepyfile("""
+                    import pytest
+                    import time
+                    def {}():
+                        time.sleep(1)
+        """.format(test_name))
+
+        result, dom = runandparse(testdir)
+        test_case = dom.find_first_by_tag('testcase')
+
+        # Test
+        assert result.ret == 0
+
+        test_case.assert_attr(name=test_name)
+        assert property_present(test_case, 'start_time')
+
+    def test_end_time(self, testdir):
+        """Verify that 'end_time' property element is present."""
+
+        # Expect
+        test_name = 'test_i_can_has_end_time'
+
+        # Setup
+        testdir.makepyfile("""
+                    import pytest
+                    import time
+                    def {}():
+                        time.sleep(1)
+        """.format(test_name))
+
+        result, dom = runandparse(testdir)
+        test_case = dom.find_first_by_tag('testcase')
+
+        # Test
+        assert result.ret == 0
+
+        test_case.assert_attr(name=test_name)
+        assert property_present(test_case, 'end_time')
+
+    def test_accurate_test_time(self, testdir):
+        """Verify that '*_time' properties element are accurate."""
+
+        # Expect
+        test_name = 'test_i_can_has_a_duration'
+        sleep_seconds = 2
+
+        # Setup
+        testdir.makepyfile("""
+                    import pytest
+                    import time
+                    def {}():
+                        time.sleep({})
+        """.format(test_name, sleep_seconds))
+
+        result, dom = runandparse(testdir)
+        test_case = dom.find_first_by_tag('testcase')
+
+        # Test
+        assert result.ret == 0
+
+        test_case.assert_attr(name=test_name)
+        assert property_present(test_case, 'start_time')
+        assert property_present(test_case, 'end_time')
+
+        start = date_parser.parse(str(test_case.get_property_value('start_time')))
+        end = date_parser.parse(str(test_case.get_property_value('end_time')))
+        delta = end - start
+        assert delta.seconds == sleep_seconds
