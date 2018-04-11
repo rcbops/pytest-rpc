@@ -2,8 +2,8 @@ tox
 flake8
 python-dateutil
 pytest
-pytest-runner
 pytest-mock
 lxml
 setuptools
 ipython
+bumpversion
