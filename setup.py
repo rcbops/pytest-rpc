@@ -12,8 +12,7 @@ with open('HISTORY.rst') as history_file:
     history = history_file.read()
 
 requirements = ['pytest>=3.5.0', 'setuptools']
-modules = ['pytest_rpc']
-data_files = [('data', ['data/molecule_junit.xsd'])]
+packages = ['pytest_rpc']
 entry_points = {
     'pytest11': [
         'rpc=pytest_rpc',
@@ -22,7 +21,7 @@ entry_points = {
 
 setup(
     name='pytest-rpc',
-    version='0.4.0',
+    version='0.5.0',
     author='rcbops',
     author_email='rcb-deploy@lists.rackspace.com',
     maintainer='rcbops',
@@ -46,7 +45,7 @@ setup(
         'Operating System :: OS Independent',
     ],
     install_requires=requirements,
-    py_modules=modules,
-    data_files=data_files,
+    packages=packages,
+    include_package_data=True,
     entry_points=entry_points,
 )
