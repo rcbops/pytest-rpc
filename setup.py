@@ -1,15 +1,24 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import os
-import codecs
+"""The setup script."""
+
 from setuptools import setup
 
+with open('README.rst') as readme_file:
+    readme = readme_file.read()
 
-def read(fname):
-    file_path = os.path.join(os.path.dirname(__file__), fname)
-    return codecs.open(file_path, encoding='utf-8').read()
+with open('HISTORY.rst') as history_file:
+    history = history_file.read()
 
+requirements = ['pytest>=3.5.0', 'setuptools']
+modules = ['pytest_rpc']
+data_files = [('data', ['data/molecule_junit.xsd'])]
+entry_points = {
+    'pytest11': [
+        'rpc=pytest_rpc',
+    ],
+}
 
 setup(
     name='pytest-rpc',
@@ -20,31 +29,24 @@ setup(
     maintainer_email='rcb-deploy@lists.rackspace.com',
     license='Apache Software License 2.0',
     url='https://github.com/rcbops/pytest-rpc',
+    keywords='pytest-rpc',
     description='Extend py.test for RPC OpenStack testing.',
-    long_description=read('README.rst'),
-    py_modules=['pytest_rpc'],
-    data_files=[('data', ['data/molecule_junit.xsd'])],
-    install_requires=['pytest>=3.5.0', 'setuptools'],
-    setup_requires=['pytest-runner'],
-    tests_require=['pytest', 'lxml'],
+    long_description=readme + '\n\n' + history,
     classifiers=[
         'Development Status :: 4 - Beta',
-        'Framework :: Pytest',
         'Intended Audience :: Developers',
-        'Topic :: Software Development :: Testing',
-        'Programming Language :: Python',
-        'Programming Language :: Python :: 2',
+        'License :: OSI Approved :: Apache Software License',
+        'Natural Language :: English',
+        "Programming Language :: Python :: 2",
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
-        'Programming Language :: Python :: Implementation :: CPython',
         'Operating System :: OS Independent',
-        'License :: OSI Approved :: Apache Software License',
     ],
-    entry_points={
-        'pytest11': [
-            'rpc = pytest_rpc',
-        ],
-    },
+    install_requires=requirements,
+    py_modules=modules,
+    data_files=data_files,
+    entry_points=entry_points,
 )
