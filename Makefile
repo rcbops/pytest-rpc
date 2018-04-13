@@ -70,11 +70,12 @@ test: ## run tests quickly with the default Python
 test-all: ## run tests on every Python version with tox
 	tox
 
-coverage: ## check code coverage quickly with the default Python
-	coverage run --source zigzag -m pytest
-	coverage report -m
-	coverage html
+coverage-html: ## check code coverage with an HTML report
+	py.test --cov-report html --cov=pytest_rpc tests/
 	$(BROWSER) htmlcov/index.html
+
+coverage-term: ## check code coverage with a simple terminal report
+	py.test --cov-report term-missing --cov=pytest_rpc tests/
 
 release: clean ## package and upload a release
 	python setup.py sdist upload
@@ -88,10 +89,10 @@ dist: clean ## builds source and wheel package
 install: clean ## install the package to the active Python's site-packages
 	python setup.py install
 
-install-venv: clean clean-venv install ## install the package after wiping the vitual environment
+install-venv: clean-venv install ## install the package after wiping the virtual environment
 
 develop: clean ## install necessary packages to setup a dev environment
 	pip install -r requirements.txt
 	pip install -e .
 
-develop-venv: clean clean-venv develop ## setup a dev environment after wiping the virtual environment
+develop-venv: clean-venv develop ## setup a dev environment after wiping the virtual environment
