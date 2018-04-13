@@ -62,7 +62,7 @@ clean-venv: check-venv ## remove all packages from current virtual environment
 	@source virtualenvwrapper.sh && wipeenv || echo "Skipping wipe of environment"
 
 lint: ## check style with flake8
-	flake8 pytest_rpc.py setup.py tests
+	flake8 pytest_rpc setup.py tests
 
 test: ## run tests quickly with the default Python
 	py.test
