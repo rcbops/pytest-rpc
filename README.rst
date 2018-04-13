@@ -22,7 +22,7 @@ Quick Start Guide
 Usage
 -----
 
-Once installed the plug-ing will automatically be loaded by all ``py.test`` test runs executed in the Python environment
+Once installed the plug-in will automatically be loaded by all ``py.test`` test runs executed in the Python environment
 in which the ``pytest-rpc`` was installed.
 
 Features
@@ -38,7 +38,7 @@ run fetched from the local environment.
 Contributing
 ------------
 
-See `CONTRIBUTING.rst`_ for more details on developing for the Zigzag project.
+See `CONTRIBUTING.rst`_ for more details on developing for the "pytest-rpc" project.
 
 Credits
 -------

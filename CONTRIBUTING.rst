@@ -88,7 +88,7 @@ Get a list of available `make` tasks::
 
    $ make help
 
-Install `zigzag` into the active virtualenv::
+Install "pytest-rpc" into the active virtualenv::
 
    $ make install-venv # OR 'make install' if you're not using virtualenvwrapper
 
