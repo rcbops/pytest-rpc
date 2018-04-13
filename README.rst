@@ -8,10 +8,22 @@ pytest-rpc
 
 Extend py.test for RPC OpenStack testing.
 
-----
+Quick Start Guide
+-----------------
 
-This `Pytest`_ plugin was generated with `Cookiecutter`_ along with `@hackebrot`_'s `Cookiecutter-pytest-plugin`_ template.
+1. You can install "pytest-rpc" via `pip`_ from `PyPI`_ ::
 
+    $ pip install pytest-rpc
+
+2. Or you can install "pytest-rpc" via `pip`_ from disk (assumes you're in the root of the repo)::
+
+    $ pip install -e .
+
+Usage
+-----
+
+Once installed the plug-in will automatically be loaded by all ``py.test`` test runs executed in the Python environment
+in which the ``pytest-rpc`` was installed.
 
 Features
 --------
@@ -23,43 +35,17 @@ If a user executes ``py.test`` tests with the ``--junitxml`` and with this plug-
 will contain a test suite properties element. The properties element will contain information gathered about the test
 run fetched from the local environment.
 
-
-Installation
-------------
-
-You can install "pytest-rpc" via `pip`_ from `PyPI`_ (when it is published)::
-
-    $ pip install pytest-rpc
-
-Or you can install "pytest-rpc" from disk via`pip`_ (assumes you're in the root of the repo)::
-
-    $ pip install -e .
-
-Usage
------
-
-Once installed the plug-ing will automatically be loaded by all ``py.test`` test runs.
-
 Contributing
 ------------
-Contributions are very welcome. Tests can be run with `tox`_, please ensure
-the coverage at least stays the same before you submit a pull request.
 
-You can install dependencies via the ``requirements.txt`` file using `pip`_ from `PyPI`_::
+See `CONTRIBUTING.rst`_ for more details on developing for the "pytest-rpc" project.
 
-    $ pip install -r requirements.txt
-
-License
+Credits
 -------
 
-Distributed under the terms of the `Apache Software License 2.0`_ license, "pytest-rpc" is free and open source software
+This `Pytest`_ plugin was generated with `Cookiecutter`_ along with `@hackebrot`_'s `Cookiecutter-pytest-plugin`_ template.
 
-
-Issues
-------
-
-If you encounter any problems, please `file an issue`_ along with a detailed description.
-
+.. _CONTRIBUTING.rst: CONTRIBUTING.rst
 .. _`Cookiecutter`: https://github.com/audreyr/cookiecutter
 .. _`@hackebrot`: https://github.com/hackebrot
 .. _`MIT`: http://opensource.org/licenses/MIT
@@ -67,7 +53,6 @@ If you encounter any problems, please `file an issue`_ along with a detailed des
 .. _`GNU GPL v3.0`: http://www.gnu.org/licenses/gpl-3.0.txt
 .. _`Apache Software License 2.0`: http://www.apache.org/licenses/LICENSE-2.0
 .. _`cookiecutter-pytest-plugin`: https://github.com/pytest-dev/cookiecutter-pytest-plugin
-.. _`file an issue`: https://github.com/rcbops/pytest-rpc/issues
 .. _`pytest`: https://github.com/pytest-dev/pytest
 .. _`tox`: https://tox.readthedocs.io/en/latest/
 .. _`pip`: https://pypi.python.org/pypi/pip/
