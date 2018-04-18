@@ -15,6 +15,8 @@
             <xs:enumeration value="PYTHON_ARTIFACT_SHA" />
             <xs:enumeration value="APT_ARTIFACT_SHA" />
             <xs:enumeration value="REPO_URL" />
+            <xs:enumeration value="JOB_NAME" />
+            <xs:enumeration value="MOLECULE_TEST_REPO" />
         </xs:restriction>
     </xs:simpleType>
 
@@ -43,9 +45,9 @@
         <xs:attribute name="value" type="xs:normalizedString" use="required" />
     </xs:complexType>
 
-    <!--Global properties element containing exactly 12 subelements.-->
+    <!--Global properties element containing exactly 14 subelements.-->
     <xs:complexType name="globalPropertiesType">
-        <xs:sequence minOccurs="12" maxOccurs="12">
+        <xs:sequence minOccurs="14" maxOccurs="14">
             <xs:element name="property" type="globalPropertyType" />
         </xs:sequence>
     </xs:complexType>
@@ -56,7 +58,7 @@
         <xs:attribute name="value" type="xs:normalizedString" use="required" />
     </xs:complexType>
 
-    <!--Testcase properties element containing exactly 1 subelement.-->
+    <!--Testcase properties element containing exactly 3 sub-elements.-->
     <xs:complexType name="testCasePropertiesType">
         <xs:sequence minOccurs="3" maxOccurs="3">
             <xs:element name="property" type="testCasePropertyType" />
