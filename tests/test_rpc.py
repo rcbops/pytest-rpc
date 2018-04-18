@@ -342,6 +342,8 @@ class TestTestCaseXMLProperties(object):
 class TestXsd(object):
     """Test cases for the 'get_xsd' utility function for retrieving the XSD for the project."""
 
+    test_env_vars = list(ENV_VARS)      # Shallow copy.
+
     def test_happy_path(self, testdir):
         """Verify that 'get_xsd' returns an XSD stream that can be used to validate JUnitXML."""
 
@@ -368,17 +370,7 @@ class TestXsd(object):
 
         # Mock
         # Missing 'BUILD_URL'
-        mock_env_vars = ['BUILD_NUMBER',
-                         'RE_JOB_ACTION',
-                         'RE_JOB_IMAGE',
-                         'RE_JOB_SCENARIO',
-                         'RE_JOB_BRANCH',
-                         'RPC_RELEASE',
-                         'RPC_PRODUCT_RELEASE',
-                         'OS_ARTIFACT_SHA',
-                         'PYTHON_ARTIFACT_SHA',
-                         'APT_ARTIFACT_SHA',
-                         'REPO_URL']
+        mock_env_vars = [x for x in self.test_env_vars if x != 'BUILD_URL']
 
         mocker.patch('pytest_rpc.ENV_VARS', mock_env_vars)
 
@@ -405,19 +397,7 @@ class TestXsd(object):
 
         # Mock
         # Extra 'BUILD_URL'
-        mock_env_vars = ['BUILD_URL',
-                         'BUILD_URL',
-                         'BUILD_NUMBER',
-                         'RE_JOB_ACTION',
-                         'RE_JOB_IMAGE',
-                         'RE_JOB_SCENARIO',
-                         'RE_JOB_BRANCH',
-                         'RPC_RELEASE',
-                         'RPC_PRODUCT_RELEASE',
-                         'OS_ARTIFACT_SHA',
-                         'PYTHON_ARTIFACT_SHA',
-                         'APT_ARTIFACT_SHA',
-                         'REPO_URL']
+        mock_env_vars = self.test_env_vars + ['BUILD_URL']
 
         mocker.patch('pytest_rpc.ENV_VARS', mock_env_vars)
 
@@ -444,18 +424,7 @@ class TestXsd(object):
 
         # Mock
         # Typo for RPC_RELEASE
-        mock_env_vars = ['BUILD_URL',
-                         'BUILD_NUMBER',
-                         'RE_JOB_ACTION',
-                         'RE_JOB_IMAGE',
-                         'RE_JOB_SCENARIO',
-                         'RE_JOB_BRANCH',
-                         'RPC_RELAESE',
-                         'RPC_PRODUCT_RELEASE',
-                         'OS_ARTIFACT_SHA',
-                         'PYTHON_ARTIFACT_SHA',
-                         'APT_ARTIFACT_SHA',
-                         'REPO_URL']
+        mock_env_vars = [x for x in self.test_env_vars if x != 'RPC_RELEASE'] + ['RCP_RELEASE']
 
         mocker.patch('pytest_rpc.ENV_VARS', mock_env_vars)
 
