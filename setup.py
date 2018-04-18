@@ -21,7 +21,7 @@ entry_points = {
 
 setup(
     name='pytest-rpc',
-    version='0.6.0',
+    version='0.6.1',
     author='rcbops',
     author_email='rcb-deploy@lists.rackspace.com',
     maintainer='rcbops',
