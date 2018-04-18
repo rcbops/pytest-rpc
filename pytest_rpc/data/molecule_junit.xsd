@@ -17,6 +17,7 @@
             <xs:enumeration value="REPO_URL" />
             <xs:enumeration value="JOB_NAME" />
             <xs:enumeration value="MOLECULE_TEST_REPO" />
+            <xs:enumeration value="MOLECULE_SCENARIO_NAME" />
         </xs:restriction>
     </xs:simpleType>
 
@@ -45,9 +46,9 @@
         <xs:attribute name="value" type="xs:normalizedString" use="required" />
     </xs:complexType>
 
-    <!--Global properties element containing exactly 14 subelements.-->
+    <!--Global properties element containing exactly 15 subelements.-->
     <xs:complexType name="globalPropertiesType">
-        <xs:sequence minOccurs="14" maxOccurs="14">
+        <xs:sequence minOccurs="15" maxOccurs="15">
             <xs:element name="property" type="globalPropertyType" />
         </xs:sequence>
     </xs:complexType>
