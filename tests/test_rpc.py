@@ -6,6 +6,7 @@ import os
 import pytest
 from lxml import etree
 from xml.dom import minidom
+from collections import OrderedDict
 from pytest_rpc import ENV_VARS, get_xsd
 from dateutil import parser as date_parser
 
@@ -247,23 +248,26 @@ class TestTestCaseXMLProperties(object):
         """
 
         # Expect
-        test_ids = ['first', 'second']
-        jira_ids = ['1st', '2nd']
-        test_names = ['test_mark1', 'test_mark2']
+        test_info = OrderedDict([('test0_name', 'test_mark1'),
+                                 ('test0_test_id', 'first'),
+                                 ('test0_jira_id', '1st'),
+                                 ('test1_name', 'test_mark2'),
+                                 ('test1_test_id', 'second'),
+                                 ('test1_jira_id', '2nd')])
 
         # Setup
         testdir.makepyfile("""
                     import pytest
-                    @pytest.mark.test_id('{}')
-                    @pytest.mark.jira('{}')
-                    def {}():
+                    @pytest.mark.test_id('{test0_test_id}')
+                    @pytest.mark.jira('{test0_jira_id}')
+                    def {test0_name}():
                         pass
 
-                    @pytest.mark.test_id('{}')
-                    @pytest.mark.jira('{}')
-                    def {}():
+                    @pytest.mark.test_id('{test1_test_id}')
+                    @pytest.mark.jira('{test1_jira_id}')
+                    def {test1_name}():
                         pass
-        """.format(test_ids[0], jira_ids[0], test_names[0], test_ids[1], jira_ids[1], test_names[1]))
+        """.format(**test_info))
 
         result, dom = runandparse(testdir)
         test_cases = dom.find_by_tag('testcase')
@@ -272,9 +276,11 @@ class TestTestCaseXMLProperties(object):
         assert result.ret == 0
 
         for i in range(len(test_cases)):
-            test_cases[i].assert_attr(name=test_names[i])
-            test_cases[i].find_by_tag('property')[0].assert_attr(name='test_id', value=test_ids[i])
-            test_cases[i].find_by_tag('property')[1].assert_attr(name='jira', value=jira_ids[i])
+            test_cases[i].assert_attr(name=test_info.get('test{}_name'.format(i)))
+            test_cases[i].find_by_tag('property')[0].assert_attr(name='test_id',
+                                                                 value=test_info.get('test{}_test_id'.format(i)))
+            test_cases[i].find_by_tag('property')[1].assert_attr(name='jira',
+                                                                 value=test_info.get('test{}_jira_id'.format(i)))
 
     def test_missing_marks(self, testdir):
         """Verify that 'test_id' and 'jira' property elements are absent when a test is NOT decorated with required
