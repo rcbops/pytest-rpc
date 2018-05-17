@@ -24,6 +24,7 @@
     <xs:simpleType name="validTestcaseProperty">
         <xs:restriction base="xs:normalizedString">
             <xs:enumeration value="test_id" />
+            <xs:enumeration value="jira" />
             <xs:enumeration value="start_time" />
             <xs:enumeration value="end_time" />
         </xs:restriction>
@@ -59,9 +60,9 @@
         <xs:attribute name="value" type="xs:normalizedString" use="required" />
     </xs:complexType>
 
-    <!--Testcase properties element containing exactly 3 sub-elements.-->
+    <!--Testcase properties element containing at least 4 sub-elements.-->
     <xs:complexType name="testCasePropertiesType">
-        <xs:sequence minOccurs="3" maxOccurs="3">
+        <xs:sequence minOccurs="4" maxOccurs="unbounded">
             <xs:element name="property" type="testCasePropertyType" />
         </xs:sequence>
     </xs:complexType>

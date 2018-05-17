@@ -32,7 +32,26 @@ ENV_VARS = ['BUILD_URL',
 
 
 # ======================================================================================================================
-# Functions
+# Functions: Private
+# ======================================================================================================================
+def _capture_marks(items, marks):
+    """Add XML properties group to each 'testcase' element that captures the specified marks.
+
+    Args:
+        items (list(_pytest.nodes.Item)): List of item objects.
+        marks (list(str)): A list of marks to capture and record in JUnitXML for each 'testcase'.
+    """
+
+    for item in items:
+        for mark in marks:
+            marker = item.get_marker(mark)
+            if marker is not None:
+                for arg in marker.args:
+                    item.user_properties.append((mark, arg))
+
+
+# ======================================================================================================================
+# Functions: Public
 # ======================================================================================================================
 @pytest.hookimpl(tryfirst=True)
 def pytest_runtestloop(session):
@@ -51,17 +70,13 @@ def pytest_runtestloop(session):
 
 
 def pytest_collection_modifyitems(items):
-    """Add XML properties group to each 'testcase' element that captures the UUID for the pytest mark 'test_id'.
+    """Called after collection has been performed, may filter or re-order the items in-place.
 
     Args:
         items (list(_pytest.nodes.Item)): List of item objects.
     """
 
-    for item in items:
-        marker = item.get_marker('test_id')
-        if marker is not None:
-            test_id = marker.args[0]
-            item.user_properties.append(('test_id', test_id))
+    _capture_marks(items, ('test_id', 'jira'))
 
 
 @pytest.hookimpl(tryfirst=True)

@@ -3,16 +3,17 @@
 # Imports
 # ======================================================================================================================
 import os
+import pytest
 from lxml import etree
 from xml.dom import minidom
+from collections import OrderedDict
 from pytest_rpc import ENV_VARS, get_xsd
 from dateutil import parser as date_parser
+
 
 # ======================================================================================================================
 # Classes
 # ======================================================================================================================
-
-
 class DomNode(object):
     def __init__(self, dom):
         self.__node = dom
@@ -48,6 +49,7 @@ class DomNode(object):
             return node.value
 
     def assert_attr(self, **kwargs):
+        # noinspection PyUnusedLocal
         __tracebackhide__ = True
         return assert_attr(self.__node, **kwargs)
 
@@ -85,8 +87,10 @@ def runandparse(testdir, *args):
 
 
 def assert_attr(node, **kwargs):
+    # noinspection PyUnusedLocal
     __tracebackhide__ = True
 
+    # noinspection PyShadowingNames
     def nodeval(node, name):
         anode = node.getAttributeNode(name)
         if anode is not None:
@@ -182,15 +186,63 @@ class TestTestCaseXMLProperties(object):
         test_case.assert_attr(name=test_name)
         test_case.find_first_by_tag('property').assert_attr(name='test_id', value=test_id)
 
-    def test_multiple_uuid_marks(self, testdir):
-        """Verify that 'test_id' property element is present when a test is decorated with multiple UUID marks.
-        The plug-in will choose the bottom-most decorator for the 'test_id'. Note: we DO NOT want to cause the test
-        run to fail in this scenario.
+    def test_jira_mark_present(self, testdir):
+        """Verify that 'jira' property element is present when a test is decorated with a Jira mark."""
+
+        # Expect
+        jira_id = 'ASC-123'
+        test_name = 'test_jira'
+
+        # Setup
+        testdir.makepyfile("""
+                    import pytest
+                    @pytest.mark.jira('{}')
+                    def {}():
+                        pass
+        """.format(jira_id, test_name))
+
+        result, dom = runandparse(testdir)
+        test_case = dom.find_first_by_tag('testcase')
+
+        # Test
+        assert result.ret == 0
+
+        test_case.assert_attr(name=test_name)
+        test_case.find_first_by_tag('property').assert_attr(name='jira', value=jira_id)
+
+    def test_mark_with_multiple_arguments(self, testdir):
+        """Verify that multiple property elements are present when a test is decorated with a mark containing multiple
+        arguments.
         """
 
         # Expect
-        test_id1 = 'first'
-        test_id2 = 'second'
+        jira_ids = OrderedDict([('jira_id0', 'ASC-123'),
+                                ('jira_id1', 'ASC-124')])
+        test_name = 'test_jira'
+
+        # Setup
+        testdir.makepyfile("""
+                    import pytest
+                    @pytest.mark.jira('{jira_id0}', '{jira_id1}')
+                    def {test_name}():
+                        pass
+        """.format(test_name=test_name, **jira_ids))
+
+        result, dom = runandparse(testdir)
+        test_case = dom.find_first_by_tag('testcase')
+
+        # Test
+        assert result.ret == 0
+
+        test_case.assert_attr(name=test_name)
+        for i in range(len(jira_ids)):
+            test_case.find_by_tag('property')[i].assert_attr(name='jira', value=jira_ids.get('jira_id{}'.format(i)))
+
+    def test_multiple_marks(self, testdir):
+        """Verify that multiple property elements are present when a test is decorated with multiple marks."""
+
+        # Expect
+        test_ids = ['first', 'second']
         test_name = 'test_uuid'
 
         # Setup
@@ -200,7 +252,7 @@ class TestTestCaseXMLProperties(object):
                     @pytest.mark.test_id('{}')
                     def {}():
                         pass
-        """.format(test_id1, test_id2, test_name))
+        """.format(*list(test_ids + [test_name])))
 
         result, dom = runandparse(testdir)
         test_case = dom.find_first_by_tag('testcase')
@@ -209,26 +261,68 @@ class TestTestCaseXMLProperties(object):
         assert result.ret == 0
 
         test_case.assert_attr(name=test_name)
-        test_case.find_first_by_tag('property').assert_attr(name='test_id', value=test_id2)
+        # The marks are processed in REVERSE order.
+        test_case.find_by_tag('property')[0].assert_attr(name='test_id', value=test_ids[1])
+        test_case.find_by_tag('property')[1].assert_attr(name='test_id', value=test_ids[0])
 
-    def test_multiple_test_cases_with_uuid_mark_present(self, testdir):
-        """Verify that 'test_id' property element is present when multiple tests are decorated with a UUID mark."""
+    def test_multiple_marks_with_multiple_arguments(self, testdir):
+        """Verify that multiple property elements are present when a test is decorated with multiple marks with each
+        containing multiple arguments.
+        """
 
         # Expect
-        test_ids = ['first', 'second']
-        test_names = ['test_uuid1', 'test_uuid2']
+        jira_ids = OrderedDict([('jira_id0', 'ASC-123'),
+                                ('jira_id1', 'ASC-124'),
+                                ('jira_id2', 'ASC-125'),
+                                ('jira_id3', 'ASC-126')])
+        test_name = 'test_jira'
+
+        # Setup
+        # The marks are processed in REVERSE order, hence the inversion of ID number in the formatted string.
+        testdir.makepyfile("""
+                    import pytest
+                    @pytest.mark.jira('{jira_id2}', '{jira_id3}')
+                    @pytest.mark.jira('{jira_id0}', '{jira_id1}')
+                    def {test_name}():
+                        pass
+        """.format(test_name=test_name, **jira_ids))
+
+        result, dom = runandparse(testdir)
+        test_case = dom.find_first_by_tag('testcase')
+
+        # Test
+        assert result.ret == 0
+
+        test_case.assert_attr(name=test_name)
+        for i in range(len(jira_ids)):
+            test_case.find_by_tag('property')[i].assert_attr(name='jira', value=jira_ids.get('jira_id{}'.format(i)))
+
+    def test_multiple_test_cases_with_marks_present(self, testdir):
+        """Verify that 'test_id' and 'jira' property elements are present when multiple tests are decorated with
+        required marks.
+        """
+
+        # Expect
+        test_info = OrderedDict([('test0_name', 'test_mark1'),
+                                 ('test0_test_id', 'first'),
+                                 ('test0_jira_id', '1st'),
+                                 ('test1_name', 'test_mark2'),
+                                 ('test1_test_id', 'second'),
+                                 ('test1_jira_id', '2nd')])
 
         # Setup
         testdir.makepyfile("""
                     import pytest
-                    @pytest.mark.test_id('{}')
-                    def {}():
+                    @pytest.mark.test_id('{test0_test_id}')
+                    @pytest.mark.jira('{test0_jira_id}')
+                    def {test0_name}():
                         pass
 
-                    @pytest.mark.test_id('{}')
-                    def {}():
+                    @pytest.mark.test_id('{test1_test_id}')
+                    @pytest.mark.jira('{test1_jira_id}')
+                    def {test1_name}():
                         pass
-        """.format(test_ids[0], test_names[0], test_ids[1], test_names[1]))
+        """.format(**test_info))
 
         result, dom = runandparse(testdir)
         test_cases = dom.find_by_tag('testcase')
@@ -237,14 +331,19 @@ class TestTestCaseXMLProperties(object):
         assert result.ret == 0
 
         for i in range(len(test_cases)):
-            test_cases[i].assert_attr(name=test_names[i])
-            test_cases[i].find_first_by_tag('property').assert_attr(name='test_id', value=test_ids[i])
+            test_cases[i].assert_attr(name=test_info.get('test{}_name'.format(i)))
+            test_cases[i].find_by_tag('property')[0].assert_attr(name='test_id',
+                                                                 value=test_info.get('test{}_test_id'.format(i)))
+            test_cases[i].find_by_tag('property')[1].assert_attr(name='jira',
+                                                                 value=test_info.get('test{}_jira_id'.format(i)))
 
-    def test_missing_uuid_marks(self, testdir):
-        """Verify that 'test_id' property element is absent when a test is NOT decorated with a UUID mark."""
+    def test_missing_marks(self, testdir):
+        """Verify that 'test_id' and 'jira' property elements are absent when a test is NOT decorated with required
+        marks.
+        """
 
         # Expect
-        test_name = 'test_no_uuid'
+        test_name = 'test_no_marks'
 
         # Setup
         testdir.makepyfile("""
@@ -261,7 +360,9 @@ class TestTestCaseXMLProperties(object):
 
         test_case.assert_attr(name=test_name)
         assert not property_present(test_case, 'test_id')
+        assert not property_present(test_case, 'jira')
 
+    @pytest.mark.skipif('SKIP_LONG_RUNNING_TESTS' in os.environ, reason='Impatient developer is impatient')
     def test_start_time(self, testdir):
         """Verify that 'start_time' property element is present."""
 
@@ -285,6 +386,7 @@ class TestTestCaseXMLProperties(object):
         test_case.assert_attr(name=test_name)
         assert property_present(test_case, 'start_time')
 
+    @pytest.mark.skipif('SKIP_LONG_RUNNING_TESTS' in os.environ, reason='Impatient developer is impatient')
     def test_end_time(self, testdir):
         """Verify that 'end_time' property element is present."""
 
@@ -308,6 +410,7 @@ class TestTestCaseXMLProperties(object):
         test_case.assert_attr(name=test_name)
         assert property_present(test_case, 'end_time')
 
+    @pytest.mark.skipif('SKIP_LONG_RUNNING_TESTS' in os.environ, reason='Impatient developer is impatient')
     def test_accurate_test_time(self, testdir):
         """Verify that '*_time' properties element are accurate."""
 
@@ -350,6 +453,31 @@ class TestXsd(object):
         # Setup
         testdir.makepyfile("""
                     import pytest
+                    @pytest.mark.jira('ASC-123')
+                    @pytest.mark.test_id('123e4567-e89b-12d3-a456-426655440000')
+                    def test_xsd():
+                        pass
+        """)
+
+        resultpath = testdir.tmpdir.join('junit.xml')
+        result = testdir.runpytest("--junitxml={}".format(resultpath))
+
+        xml_doc = etree.parse(str(resultpath))
+        xmlschema = etree.XMLSchema(etree.parse(get_xsd()))
+
+        # Test
+        assert result.ret == 0
+        xmlschema.assertValid(xml_doc)
+
+    def test_multiple_jira_references(self, testdir):
+        """Verify that 'get_xsd' returns an XSD stream when a testcase is decorated Jira mark with multiple
+        arguments.
+        """
+
+        # Setup
+        testdir.makepyfile("""
+                    import pytest
+                    @pytest.mark.jira('ASC-123', 'ASC-124')
                     @pytest.mark.test_id('123e4567-e89b-12d3-a456-426655440000')
                     def test_xsd():
                         pass
@@ -446,12 +574,54 @@ class TestXsd(object):
         assert result.ret == 0
         assert xmlschema.validate(xml_doc) is False
 
-    def test_missing_uuid(self, testdir):
-        """Verify that XSD will enforce the presence of "test_id" property for test cases."""
+    def test_missing_required_marks(self, testdir):
+        """Verify that XSD will enforce the presence of 'test_id' and 'jira_id' properties for test cases."""
 
         # Setup
         testdir.makepyfile("""
                     import pytest
+                    def test_missing_marks():
+                        pass
+        """)
+
+        resultpath = testdir.tmpdir.join('junit.xml')
+        result = testdir.runpytest("--junitxml={}".format(resultpath))
+
+        xml_doc = etree.parse(str(resultpath))
+        xmlschema = etree.XMLSchema(etree.parse(get_xsd()))
+
+        # Test
+        assert result.ret == 0
+        assert xmlschema.validate(xml_doc) is False
+
+    def test_missing_uuid_mark(self, testdir):
+        """Verify that XSD will enforce the presence of 'test_id' property for test cases."""
+
+        # Setup
+        testdir.makepyfile("""
+                    import pytest
+                    @pytest.mark.jira('ASC-123')
+                    def test_missing_uuid():
+                        pass
+        """)
+
+        resultpath = testdir.tmpdir.join('junit.xml')
+        result = testdir.runpytest("--junitxml={}".format(resultpath))
+
+        xml_doc = etree.parse(str(resultpath))
+        xmlschema = etree.XMLSchema(etree.parse(get_xsd()))
+
+        # Test
+        assert result.ret == 0
+        assert xmlschema.validate(xml_doc) is False
+
+    def test_missing_jira_mark(self, testdir):
+        """Verify that XSD will enforce the presence of 'jira' property for test cases."""
+
+        # Setup
+        testdir.makepyfile("""
+                    import pytest
+                    @pytest.mark.test_id('123e4567-e89b-12d3-a456-426655440000')
                     def test_missing_uuid():
                         pass
         """)
@@ -473,6 +643,7 @@ class TestXsd(object):
         testdir.makepyfile("""
                     import pytest
                     @pytest.mark.test_id('123e4567-e89b-12d3-a456-426655440000')
+                    @pytest.mark.jira('ASC-123')
                     def test_extra_mark():
                         pass
         """)
@@ -481,7 +652,6 @@ class TestXsd(object):
         result = testdir.runpytest("--junitxml={}".format(resultpath))
 
         # Add another property element for the testcase.
-
         xml_doc = etree.parse(str(resultpath))
         xml_doc.getroot().find('./testcase/properties').append(etree.Element('property',
                                                                              attrib={'name': 'extra', 'value': 'fail'}))
@@ -498,6 +668,7 @@ class TestXsd(object):
         testdir.makepyfile("""
                     import pytest
                     @pytest.mark.test_id('123e4567-e89b-12d3-a456-426655440000')
+                    @pytest.mark.jira('ASC-123')
                     def test_extra_mark():
                         pass
         """)
@@ -506,7 +677,6 @@ class TestXsd(object):
         result = testdir.runpytest("--junitxml={}".format(resultpath))
 
         # Add another property element for the testcase.
-
         xml_doc = etree.parse(str(resultpath))
         xml_doc.getroot().find('./testcase/properties/property').attrib['name'] = 'wrong_test_id'
         xmlschema = etree.XMLSchema(etree.parse(get_xsd()))
