@@ -210,27 +210,23 @@ class TestTestCaseXMLProperties(object):
         test_case.assert_attr(name=test_name)
         test_case.find_first_by_tag('property').assert_attr(name='jira', value=jira_id)
 
-    def test_multiple_marks(self, testdir):
-        """Verify that 'test_id' and 'jira' property elements are present when a test is decorated with multiple marks.
-        The plug-in will choose the bottom-most decorator for the marks. Note: we DO NOT want to cause the test
-        run to fail in this scenario.
+    def test_mark_with_multiple_arguments(self, testdir):
+        """Verify that multiple property elements are present when a test is decorated with a mark containing multiple
+        arguments.
         """
 
         # Expect
-        test_ids = ['first', 'second']
-        jira_ids = ['1st', '2nd']
-        test_name = 'test_uuid'
+        jira_ids = OrderedDict([('jira_id0', 'ASC-123'),
+                                ('jira_id1', 'ASC-124')])
+        test_name = 'test_jira'
 
         # Setup
         testdir.makepyfile("""
                     import pytest
-                    @pytest.mark.test_id('{}')
-                    @pytest.mark.test_id('{}')
-                    @pytest.mark.jira('{}')
-                    @pytest.mark.jira('{}')
-                    def {}():
+                    @pytest.mark.jira('{jira_id0}', '{jira_id1}')
+                    def {test_name}():
                         pass
-        """.format(test_ids[0], test_ids[1], jira_ids[0], jira_ids[1], test_name))
+        """.format(test_name=test_name, **jira_ids))
 
         result, dom = runandparse(testdir)
         test_case = dom.find_first_by_tag('testcase')
@@ -239,8 +235,67 @@ class TestTestCaseXMLProperties(object):
         assert result.ret == 0
 
         test_case.assert_attr(name=test_name)
+        for i in range(len(jira_ids)):
+            test_case.find_by_tag('property')[i].assert_attr(name='jira', value=jira_ids.get('jira_id{}'.format(i)))
+
+    def test_multiple_marks(self, testdir):
+        """Verify that multiple property elements are present when a test is decorated with multiple marks."""
+
+        # Expect
+        test_ids = ['first', 'second']
+        test_name = 'test_uuid'
+
+        # Setup
+        testdir.makepyfile("""
+                    import pytest
+                    @pytest.mark.test_id('{}')
+                    @pytest.mark.test_id('{}')
+                    def {}():
+                        pass
+        """.format(*list(test_ids + [test_name])))
+
+        result, dom = runandparse(testdir)
+        test_case = dom.find_first_by_tag('testcase')
+
+        # Test
+        assert result.ret == 0
+
+        test_case.assert_attr(name=test_name)
+        # The marks are processed in REVERSE order.
         test_case.find_by_tag('property')[0].assert_attr(name='test_id', value=test_ids[1])
-        test_case.find_by_tag('property')[1].assert_attr(name='jira', value=jira_ids[1])
+        test_case.find_by_tag('property')[1].assert_attr(name='test_id', value=test_ids[0])
+
+    def test_multiple_marks_with_multiple_arguments(self, testdir):
+        """Verify that multiple property elements are present when a test is decorated with multiple marks with each
+        containing multiple arguments.
+        """
+
+        # Expect
+        jira_ids = OrderedDict([('jira_id0', 'ASC-123'),
+                                ('jira_id1', 'ASC-124'),
+                                ('jira_id2', 'ASC-125'),
+                                ('jira_id3', 'ASC-126')])
+        test_name = 'test_jira'
+
+        # Setup
+        # The marks are processed in REVERSE order, hence the inversion of ID number in the formatted string.
+        testdir.makepyfile("""
+                    import pytest
+                    @pytest.mark.jira('{jira_id2}', '{jira_id3}')
+                    @pytest.mark.jira('{jira_id0}', '{jira_id1}')
+                    def {test_name}():
+                        pass
+        """.format(test_name=test_name, **jira_ids))
+
+        result, dom = runandparse(testdir)
+        test_case = dom.find_first_by_tag('testcase')
+
+        # Test
+        assert result.ret == 0
+
+        test_case.assert_attr(name=test_name)
+        for i in range(len(jira_ids)):
+            test_case.find_by_tag('property')[i].assert_attr(name='jira', value=jira_ids.get('jira_id{}'.format(i)))
 
     def test_multiple_test_cases_with_marks_present(self, testdir):
         """Verify that 'test_id' and 'jira' property elements are present when multiple tests are decorated with
@@ -399,6 +454,30 @@ class TestXsd(object):
         testdir.makepyfile("""
                     import pytest
                     @pytest.mark.jira('ASC-123')
+                    @pytest.mark.test_id('123e4567-e89b-12d3-a456-426655440000')
+                    def test_xsd():
+                        pass
+        """)
+
+        resultpath = testdir.tmpdir.join('junit.xml')
+        result = testdir.runpytest("--junitxml={}".format(resultpath))
+
+        xml_doc = etree.parse(str(resultpath))
+        xmlschema = etree.XMLSchema(etree.parse(get_xsd()))
+
+        # Test
+        assert result.ret == 0
+        xmlschema.assertValid(xml_doc)
+
+    def test_multiple_jira_references(self, testdir):
+        """Verify that 'get_xsd' returns an XSD stream when a testcase is decorated Jira mark with multiple
+        arguments.
+        """
+
+        # Setup
+        testdir.makepyfile("""
+                    import pytest
+                    @pytest.mark.jira('ASC-123', 'ASC-124')
                     @pytest.mark.test_id('123e4567-e89b-12d3-a456-426655440000')
                     def test_xsd():
                         pass

@@ -46,7 +46,8 @@ def _capture_marks(items, marks):
         for mark in marks:
             marker = item.get_marker(mark)
             if marker is not None:
-                item.user_properties.append((mark, marker.args[0]))
+                for arg in marker.args:
+                    item.user_properties.append((mark, arg))
 
 
 # ======================================================================================================================
