@@ -40,12 +40,18 @@ Contributing
 
 See `CONTRIBUTING.rst`_ for more details on developing for the "pytest-rpc" project.
 
+Release Process
+---------------
+
+See `release_process.rst`_ for information on the release process for 'pytest-rpc'
+
 Credits
 -------
 
 This `Pytest`_ plugin was generated with `Cookiecutter`_ along with `@hackebrot`_'s `Cookiecutter-pytest-plugin`_ template.
 
 .. _CONTRIBUTING.rst: CONTRIBUTING.rst
+.. _release_process.rst: docs/release_process.rst
 .. _`Cookiecutter`: https://github.com/audreyr/cookiecutter
 .. _`@hackebrot`: https://github.com/hackebrot
 .. _`MIT`: http://opensource.org/licenses/MIT
