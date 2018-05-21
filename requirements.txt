@@ -9,3 +9,4 @@ lxml
 setuptools
 ipython
 bumpversion
+twine
