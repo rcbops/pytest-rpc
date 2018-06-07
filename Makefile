@@ -1,4 +1,4 @@
-.PHONY: clean clean-test clean-pyc clean-build clean-venv check-venv install-venv develop-venv help
+.PHONY: clean clean-test clean-pyc clean-build re-clean-build clean-venv check-venv install-venv develop-venv help foo build re-build
 .DEFAULT_GOAL := help
 
 SHELL := /bin/bash
@@ -39,6 +39,13 @@ check-venv: ## verify that the user is running in a Python virtual environment
 clean: clean-test clean-pyc clean-build   ## remove all build, test, coverage, artifacts and wipe virtualenv
 
 clean-build: ## remove build artifacts
+	rm -fr build/
+	rm -fr dist/
+	rm -fr .eggs/
+	find . -name '*.egg-info' -exec rm -fr {} +
+	find . -name '*.egg' -exec rm -f {} +
+
+re-clean-build: ## remove build artifacts
 	rm -fr build/
 	rm -fr dist/
 	rm -fr .eggs/
@@ -103,6 +110,9 @@ publish: ## publish package to PyPI
 build: ## build a wheel
 	python setup.py bdist_wheel
 
+re-build: ## build a wheel
+	python setup.py bdist_wheel
+
 bump-major: ## bumps the version of by major
 	bumpversion major
 
@@ -112,14 +122,14 @@ bump-minor: ## bumps the version of by minor
 bump-patch: ## bumps the version of by patch
 	bumpversion patch
 
-release-major: clean-build build develop lint test clean-build bump-major build publish ## package and upload a major release
+release-major: clean-build build develop lint test re-clean-build bump-major re-build publish ## package and upload a major release
 	echo 'Successfully released!'
 	echo 'Please push the newly created tag and commit to GitHub.'
 
-release-minor: clean-build build develop lint test clean-build bump-minor build publish ## package and upload a minor release
+release-minor: clean-build build develop lint test re-clean-build bump-minor re-build publish ## package and upload a minor release
 	echo 'Successfully released!'
 	echo 'Please push the newly created tag and commit to GitHub.'
 
-release-patch: clean-build build develop lint test clean-build bump-patch build publish ## package and upload a patch release
+release-patch: clean-build build develop lint test re-clean-build bump-patch re-build publish ## package and upload a patch release
 	echo 'Successfully released!'
 	echo 'Please push the newly created tag and commit to GitHub.'
