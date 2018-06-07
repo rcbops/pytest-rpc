@@ -22,7 +22,7 @@ entry_points = {
 
 setup(
     name='pytest-rpc',
-    version='0.6.1',
+    version='0.7.0',
     author='rpc-automation',
     author_email='rpc-automation@rackspace.com',
     license='Apache Software License 2.0',
