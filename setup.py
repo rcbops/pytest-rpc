@@ -11,6 +11,7 @@ with open('README.rst') as readme_file:
 with open('HISTORY.rst') as history_file:
     history = history_file.read()
 
+python_requirements = '>=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*'
 requirements = ['pytest>=3.5.0', 'setuptools']
 packages = ['pytest_rpc']
 entry_points = {
@@ -22,30 +23,31 @@ entry_points = {
 setup(
     name='pytest-rpc',
     version='0.6.1',
-    author='rcbops',
-    author_email='rcb-deploy@lists.rackspace.com',
-    maintainer='rcbops',
-    maintainer_email='rcb-deploy@lists.rackspace.com',
+    author='rpc-automation',
+    author_email='rpc-automation@rackspace.com',
     license='Apache Software License 2.0',
     url='https://github.com/rcbops/pytest-rpc',
-    keywords='pytest-rpc',
+    keywords='py.test pytest pytest-rpc',
     description='Extend py.test for RPC OpenStack testing.',
     long_description=readme + '\n\n' + history,
     classifiers=[
         'Development Status :: 4 - Beta',
+        'Framework :: Pytest',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: Apache Software License',
         'Natural Language :: English',
-        "Programming Language :: Python :: 2",
+        'Operating System :: OS Independent',
+        'Programming Language :: Python :: 2',
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
-        'Operating System :: OS Independent',
+        'Topic :: Software Development :: Libraries :: Python Modules'
     ],
+    include_package_data=True,
+    python_requires=python_requirements,
     install_requires=requirements,
     packages=packages,
-    include_package_data=True,
     entry_points=entry_points,
 )
