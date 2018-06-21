@@ -35,6 +35,24 @@ If a user executes ``py.test`` tests with the ``--junitxml`` and with this plug-
 will contain a test suite properties element. The properties element will contain information gathered about the test
 run fetched from the local environment.
 
+Configuration
+^^^^^^^^^^^^^
+
+You can configure this plugin to tell it which 'test-runner' you are using when you execute this test.  This will let
+pytest-rpc know what information to collect inside of the junit.xml.  If no configuration is found it will assume
+that you are using molecule.
+
+1. You can configure in an ini file that is readable by pytest (setup.cfg, pytest.ini, tox.ini)::
+
+    [pytest]
+        test-runner=pytest
+
+2. You can configure via the command line::
+
+    pytest /path/to/test_test.py --test-runner=molecule
+
+3. The current available options are 'pytest' & 'molecule'
+
 Contributing
 ------------
 
