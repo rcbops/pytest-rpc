@@ -18,7 +18,7 @@
             <xs:enumeration value="JOB_NAME" />
             <xs:enumeration value="MOLECULE_TEST_REPO" />
             <xs:enumeration value="MOLECULE_SCENARIO_NAME" />
-            <xs:enumeration value="test-runner" />
+            <xs:enumeration value="ci-environment" />
         </xs:restriction>
     </xs:simpleType>
 

@@ -13,8 +13,8 @@ import re
 # ======================================================================================================================
 # Tests
 # ======================================================================================================================
-def test_config_molecule(testdir, single_decorated_test_function):
-    """Verify that 'test-runner' with a value of 'molecule' can be supplied in the config"""
+def test_config_asc(testdir, single_decorated_test_function):
+    """Verify that 'ci-environment' with a value of 'asc' can be supplied in the config"""
 
     # Expect
     mark_type_exp = 'test_id'
@@ -28,18 +28,18 @@ def test_config_molecule(testdir, single_decorated_test_function):
     config = \
 """
 [pytest]
-test-runner=molecule
+ci-environment=asc
 """  # noqa
 
     junit_xml = run_and_parse_with_config(testdir, config)
 
     # Test
-    assert 'test-runner' in junit_xml.testsuite_props
-    assert junit_xml.testsuite_props['test-runner'] == 'molecule'
+    assert 'ci-environment' in junit_xml.testsuite_props
+    assert junit_xml.testsuite_props['ci-environment'] == 'asc'
 
 
-def test_config_pytest(testdir, single_decorated_test_function):
-    """Verify that 'test-runner' with a value of 'pytest' can be supplied in the config"""
+def test_config_mk8s(testdir, single_decorated_test_function):
+    """Verify that 'ci-environment' with a value of 'mk8s' can be supplied in the config"""
 
     # Expect
     mark_type_exp = 'test_id'
@@ -53,18 +53,18 @@ def test_config_pytest(testdir, single_decorated_test_function):
     config = \
 """
 [pytest]
-test-runner=pytest
+ci-environment=mk8s
 """  # noqa
 
     junit_xml = run_and_parse_with_config(testdir, config)
 
     # Test
-    assert 'test-runner' in junit_xml.testsuite_props
-    assert junit_xml.testsuite_props['test-runner'] == 'pytest'
+    assert 'ci-environment' in junit_xml.testsuite_props
+    assert junit_xml.testsuite_props['ci-environment'] == 'mk8s'
 
 
 def test_config_default(testdir, single_decorated_test_function):
-    """Verify the default value for 'test-runner'"""
+    """Verify the default value for 'ci-environment'"""
 
     # Expect
     mark_type_exp = 'test_id'
@@ -83,12 +83,12 @@ def test_config_default(testdir, single_decorated_test_function):
     junit_xml = run_and_parse_with_config(testdir, config)
 
     # Test
-    assert 'test-runner' in junit_xml.testsuite_props
-    assert junit_xml.testsuite_props['test-runner'] == 'molecule'
+    assert 'ci-environment' in junit_xml.testsuite_props
+    assert junit_xml.testsuite_props['ci-environment'] == 'asc'
 
 
 def test_cli_trumps_config(testdir, single_decorated_test_function):
-    """Verify that 'test-runner' passed via the CLI has the highest precedence"""
+    """Verify that 'ci-environment' passed via the CLI has the highest precedence"""
 
     # Expect
     mark_type_exp = 'test_id'
@@ -102,7 +102,7 @@ def test_cli_trumps_config(testdir, single_decorated_test_function):
     config = \
 """
 [pytest]
-test-runner=molecule
+ci-environment=asc
 """  # noqa
 
     result_path = testdir.tmpdir.join('junit.xml')
@@ -111,19 +111,19 @@ test-runner=molecule
         f.write(config)
 
     result = testdir.runpytest(
-        "--junitxml={}".format(result_path), "-c={}".format(config_path), "--test-runner=pytest")
+        "--junitxml={}".format(result_path), "-c={}".format(config_path), "--ci-environment=mk8s")
 
     assert result.ret == 0
 
     junit_xml = JunitXml(str(result_path))
 
     # Test
-    assert 'test-runner' in junit_xml.testsuite_props
-    assert junit_xml.testsuite_props['test-runner'] == 'pytest'
+    assert 'ci-environment' in junit_xml.testsuite_props
+    assert junit_xml.testsuite_props['ci-environment'] == 'mk8s'
 
 
 def test_unknown_value(testdir, single_decorated_test_function):
-    """Verify the default value for 'test-runner'"""
+    """Verify the default value for 'ci-environment'"""
 
     # Expect
     mark_type_exp = 'test_id'
@@ -137,7 +137,7 @@ def test_unknown_value(testdir, single_decorated_test_function):
     config = \
 """
 [pytest]
-test-runner=foobar
+ci-environment=foobar
 """  # noqa
 
     result_path = testdir.tmpdir.join('junit.xml')

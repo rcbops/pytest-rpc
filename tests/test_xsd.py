@@ -7,21 +7,21 @@
 # ======================================================================================================================
 from __future__ import absolute_import
 from lxml import etree
-from pytest_rpc import ENV_VARS, get_xsd
+from pytest_rpc import MK8S_ENV_VARS, ASC_ENV_VARS, get_xsd
 from tests.conftest import run_and_parse
 from tests.conftest import run_and_parse_with_config
 
 # ======================================================================================================================
 # Globals
 # ======================================================================================================================
-TEST_ENV_VARS = list(ENV_VARS)      # Shallow copy.
-PYTEST_TEST_ENV_VARS = list(ENV_VARS)      # Shallow copy.
+TEST_ENV_VARS = list(ASC_ENV_VARS)      # Shallow copy.
+MK8S_TEST_ENV_VARS = list(MK8S_ENV_VARS)      # Shallow copy.
 
 
 # ======================================================================================================================
 # Tests
 # ======================================================================================================================
-def test_happy_path_molecule(testdir, properly_decorated_test_function):
+def test_happy_path_asc(testdir, properly_decorated_test_function):
     """Verify that 'get_xsd' returns an XSD stream that can be used to validate JUnitXML."""
 
     # Setup
@@ -36,8 +36,8 @@ def test_happy_path_molecule(testdir, properly_decorated_test_function):
     xmlschema.assertValid(xml_doc)
 
 
-def test_happy_path_pytest(testdir, properly_decorated_test_function):
-    """Verify that 'get_xsd' returns an XSD stream that can be used to validate JUnitXML when configured with pytest."""
+def test_happy_path_mk8s(testdir, properly_decorated_test_function):
+    """Verify that 'get_xsd' returns an XSD stream that can be used to validate JUnitXML when configured with mk8s."""
 
     # Setup
     testdir.makepyfile(properly_decorated_test_function.format(test_name='test_happy_path',
@@ -46,11 +46,11 @@ def test_happy_path_pytest(testdir, properly_decorated_test_function):
     config = \
 """
 [pytest]
-test-runner=pytest
+ci-environment=mk8s
 """  # noqa
 
     xml_doc = run_and_parse_with_config(testdir, config).xml_doc
-    xmlschema = etree.XMLSchema(etree.parse(get_xsd('pytest')))
+    xmlschema = etree.XMLSchema(etree.parse(get_xsd('mk8s')))
 
     # Test
     xmlschema.assertValid(xml_doc)
@@ -84,7 +84,7 @@ def test_missing_global_property(testdir, properly_decorated_test_function, mock
     # Missing 'BUILD_URL'
     mock_env_vars = [x for x in TEST_ENV_VARS if x != 'BUILD_URL']
 
-    mocker.patch('pytest_rpc.ENV_VARS', mock_env_vars)
+    mocker.patch('pytest_rpc.ASC_ENV_VARS', mock_env_vars)
 
     # Setup
     testdir.makepyfile(properly_decorated_test_function.format(test_name='test_missing_global',
@@ -105,7 +105,7 @@ def test_extra_global_property(testdir, properly_decorated_test_function, mocker
     # Extra 'BUILD_URL'
     mock_env_vars = TEST_ENV_VARS + ['BUILD_URL']
 
-    mocker.patch('pytest_rpc.ENV_VARS', mock_env_vars)
+    mocker.patch('pytest_rpc.ASC_ENV_VARS', mock_env_vars)
 
     # Setup
     testdir.makepyfile(properly_decorated_test_function.format(test_name='test_extra_global',
@@ -126,7 +126,7 @@ def test_typo_global_property(testdir, properly_decorated_test_function, mocker)
     # Typo for RPC_RELEASE
     mock_env_vars = [x for x in TEST_ENV_VARS if x != 'RPC_RELEASE'] + ['RCP_RELEASE']
 
-    mocker.patch('pytest_rpc.ENV_VARS', mock_env_vars)
+    mocker.patch('pytest_rpc.ASC_ENV_VARS', mock_env_vars)
 
     # Setup
     testdir.makepyfile(properly_decorated_test_function.format(test_name='test_typo_global',

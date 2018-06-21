@@ -19,7 +19,7 @@
             <xs:enumeration value="GIT_LOCAL_BRANCH" />
             <xs:enumeration value="GIT_AUTHOR_NAME" />
             <xs:enumeration value="GIT_AUTHOR_EMAIL" />
-            <xs:enumeration value="test-runner" />
+            <xs:enumeration value="ci-environment" />
         </xs:restriction>
     </xs:simpleType>
 
