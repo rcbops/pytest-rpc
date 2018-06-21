@@ -43,4 +43,6 @@ def test_env_vars_set(testdir, undecorated_test_function, testsuite_attribs_exp)
     # Test
     assert is_sub_dict(testsuite_attribs_exp, junit_xml.testsuite_attribs)
 
-    assert junit_xml.testsuite_props == {env: env for env in ENV_VARS}
+    expected = {env: env for env in ENV_VARS}
+    expected['test-runner'] = 'molecule'  # This is not supplied by the environment
+    assert junit_xml.testsuite_props == expected

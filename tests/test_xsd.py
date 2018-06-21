@@ -9,17 +9,19 @@ from __future__ import absolute_import
 from lxml import etree
 from pytest_rpc import ENV_VARS, get_xsd
 from tests.conftest import run_and_parse
+from tests.conftest import run_and_parse_with_config
 
 # ======================================================================================================================
 # Globals
 # ======================================================================================================================
 TEST_ENV_VARS = list(ENV_VARS)      # Shallow copy.
+PYTEST_TEST_ENV_VARS = list(ENV_VARS)      # Shallow copy.
 
 
 # ======================================================================================================================
 # Tests
 # ======================================================================================================================
-def test_happy_path(testdir, properly_decorated_test_function):
+def test_happy_path_molecule(testdir, properly_decorated_test_function):
     """Verify that 'get_xsd' returns an XSD stream that can be used to validate JUnitXML."""
 
     # Setup
@@ -29,6 +31,26 @@ def test_happy_path(testdir, properly_decorated_test_function):
 
     xml_doc = run_and_parse(testdir).xml_doc
     xmlschema = etree.XMLSchema(etree.parse(get_xsd()))
+
+    # Test
+    xmlschema.assertValid(xml_doc)
+
+
+def test_happy_path_pytest(testdir, properly_decorated_test_function):
+    """Verify that 'get_xsd' returns an XSD stream that can be used to validate JUnitXML when configured with pytest."""
+
+    # Setup
+    testdir.makepyfile(properly_decorated_test_function.format(test_name='test_happy_path',
+                                                               test_id='123e4567-e89b-12d3-a456-426655440000',
+                                                               jira_id='ASC-123'))
+    config = \
+"""
+[pytest]
+test-runner=pytest
+"""  # noqa
+
+    xml_doc = run_and_parse_with_config(testdir, config).xml_doc
+    xmlschema = etree.XMLSchema(etree.parse(get_xsd('pytest')))
 
     # Test
     xmlschema.assertValid(xml_doc)
