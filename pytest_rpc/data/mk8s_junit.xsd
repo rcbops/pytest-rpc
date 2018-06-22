@@ -5,19 +5,20 @@
         <xs:restriction base="xs:normalizedString">
             <xs:enumeration value="BUILD_URL" />
             <xs:enumeration value="BUILD_NUMBER" />
-            <xs:enumeration value="RE_JOB_ACTION" />
-            <xs:enumeration value="RE_JOB_IMAGE" />
-            <xs:enumeration value="RE_JOB_SCENARIO" />
-            <xs:enumeration value="RE_JOB_BRANCH" />
-            <xs:enumeration value="RPC_RELEASE" />
-            <xs:enumeration value="RPC_PRODUCT_RELEASE" />
-            <xs:enumeration value="OS_ARTIFACT_SHA" />
-            <xs:enumeration value="PYTHON_ARTIFACT_SHA" />
-            <xs:enumeration value="APT_ARTIFACT_SHA" />
-            <xs:enumeration value="REPO_URL" />
+            <xs:enumeration value="BUILD_ID" />
+            <xs:enumeration value="NODE_NAME" />
             <xs:enumeration value="JOB_NAME" />
-            <xs:enumeration value="MOLECULE_TEST_REPO" />
-            <xs:enumeration value="MOLECULE_SCENARIO_NAME" />
+            <xs:enumeration value="BUILD_TAG" />
+            <xs:enumeration value="JENKINS_URL" />
+            <xs:enumeration value="EXECUTOR_NUMBER" />
+            <xs:enumeration value="WORKSPACE" />
+            <xs:enumeration value="CVS_BRANCH" />
+            <xs:enumeration value="GIT_COMMIT" />
+            <xs:enumeration value="GIT_URL" />
+            <xs:enumeration value="GIT_BRANCH" />
+            <xs:enumeration value="GIT_LOCAL_BRANCH" />
+            <xs:enumeration value="GIT_AUTHOR_NAME" />
+            <xs:enumeration value="GIT_AUTHOR_EMAIL" />
             <xs:enumeration value="ci-environment" />
         </xs:restriction>
     </xs:simpleType>
@@ -41,7 +42,7 @@
             </xs:extension>
         </xs:simpleContent>
     </xs:complexType>
-    
+
     <!--Global property element with required attributes.-->
     <xs:complexType name="globalPropertyType">
         <xs:attribute name="name" type="validGlobalProperty" use="required" />
@@ -50,7 +51,7 @@
 
     <!--Global properties element containing exactly 15 subelements.-->
     <xs:complexType name="globalPropertiesType">
-        <xs:sequence minOccurs="16" maxOccurs="16">
+        <xs:sequence minOccurs="17" maxOccurs="17">
             <xs:element name="property" type="globalPropertyType" />
         </xs:sequence>
     </xs:complexType>
@@ -86,7 +87,7 @@
         <xs:attribute name="classname" type="xs:normalizedString" />
         <xs:attribute name="status" type="xs:normalizedString" />
     </xs:complexType>
-    
+
     <!--Test suite.-->
     <xs:complexType name="testSuiteType">
         <xs:sequence>
@@ -107,7 +108,7 @@
         <xs:attribute name="time" type="xs:decimal" />
         <xs:attribute name="timestamp" type="xs:dateTime" />
     </xs:complexType>
-    
+
     <!--Test suites.-->
     <xs:complexType name="testSuitesType">
         <xs:sequence maxOccurs="unbounded">
@@ -121,7 +122,7 @@
         <xs:attribute name="errors" type="xs:integer" />
     </xs:complexType>
     <!--END COMPLEX TYPES-->
-    
+
     <!--ELEMENTS-->
     <!--These are the allowed root elements in the JUnitXML file.-->
     <xs:element name="testsuite" type="testSuiteType" />

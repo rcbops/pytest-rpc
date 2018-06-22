@@ -14,21 +14,37 @@ from datetime import datetime
 # ======================================================================================================================
 # Globals
 # ======================================================================================================================
-ENV_VARS = ['BUILD_URL',
-            'BUILD_NUMBER',
-            'RE_JOB_ACTION',
-            'RE_JOB_IMAGE',
-            'RE_JOB_SCENARIO',
-            'RE_JOB_BRANCH',
-            'RPC_RELEASE',
-            'RPC_PRODUCT_RELEASE',
-            'OS_ARTIFACT_SHA',
-            'PYTHON_ARTIFACT_SHA',
-            'APT_ARTIFACT_SHA',
-            'REPO_URL',
-            'JOB_NAME',
-            'MOLECULE_TEST_REPO',
-            'MOLECULE_SCENARIO_NAME']
+ASC_ENV_VARS = ['BUILD_URL',
+                'BUILD_NUMBER',
+                'RE_JOB_ACTION',
+                'RE_JOB_IMAGE',
+                'RE_JOB_SCENARIO',
+                'RE_JOB_BRANCH',
+                'RPC_RELEASE',
+                'RPC_PRODUCT_RELEASE',
+                'OS_ARTIFACT_SHA',
+                'PYTHON_ARTIFACT_SHA',
+                'APT_ARTIFACT_SHA',
+                'REPO_URL',
+                'JOB_NAME',
+                'MOLECULE_TEST_REPO',
+                'MOLECULE_SCENARIO_NAME']
+MK8S_ENV_VARS = ['BUILD_URL',
+                 'BUILD_NUMBER',
+                 'BUILD_ID',
+                 'NODE_NAME',
+                 'JOB_NAME',
+                 'BUILD_TAG',
+                 'JENKINS_URL',
+                 'EXECUTOR_NUMBER',
+                 'WORKSPACE',
+                 'CVS_BRANCH',
+                 'GIT_COMMIT',
+                 'GIT_URL',
+                 'GIT_BRANCH',
+                 'GIT_LOCAL_BRANCH',
+                 'GIT_AUTHOR_NAME',
+                 'GIT_AUTHOR_EMAIL']
 
 
 # ======================================================================================================================
@@ -50,6 +66,36 @@ def _capture_marks(items, marks):
                     item.user_properties.append((mark, arg))
 
 
+def _get_ci_environment(session):
+    """Gets the ci-environment used when executing tests
+    default is 'asc'
+
+    Args:
+        session (_pytest.main.Session): The pytest session object
+
+    Returns:
+        str: The value of the config with the highest precedence
+    """
+    #  Try to get configs from CLI and ini
+    try:
+        cli_option = session.config.getoption('--ci-environment')
+    except ValueError:
+        cli_option = None
+    try:
+        ini_option = session.config.getini('ci-environment')
+    except ValueError:
+        ini_option = None
+
+    # Determine if the option passed with the highest precedence is a valid option
+    highest_precedence = cli_option or ini_option or 'asc'
+    white_list = ['asc', 'mk8s']
+    if not any(x == highest_precedence for x in white_list):
+        raise RuntimeError(
+            "The value {} is not a valid value for the 'ci-environment' configuration".format(highest_precedence))
+
+    return highest_precedence
+
+
 # ======================================================================================================================
 # Functions: Public
 # ======================================================================================================================
@@ -65,8 +111,14 @@ def pytest_runtestloop(session):
             junit_xml_config = getattr(session.config, '_xml', None)
 
             if junit_xml_config:
-                for env_var in ENV_VARS:
-                    junit_xml_config.add_global_property(env_var, os.getenv(env_var, 'Unknown'))
+                ci_environment = _get_ci_environment(session)
+                junit_xml_config.add_global_property('ci-environment', ci_environment)
+                if ci_environment == 'asc':
+                    for env_var in ASC_ENV_VARS:
+                        junit_xml_config.add_global_property(env_var, os.getenv(env_var, 'Unknown'))
+                elif ci_environment == 'mk8s':
+                    for env_var in MK8S_ENV_VARS:
+                        junit_xml_config.add_global_property(env_var, os.getenv(env_var, 'Unknown'))
 
 
 def pytest_collection_modifyitems(items):
@@ -101,11 +153,31 @@ def pytest_runtest_teardown(item):
     item.user_properties.append(('end_time', now))
 
 
-def get_xsd():
+def pytest_addoption(parser):
+    """Adds a config option to pytest
+
+    Args:
+        parser (_pytest.config.Parser): A parser object
+    """
+    config_option = "ci-environment"
+    config_option_help = "The ci-environment used to execute the tests, (default: 'asc')"
+    parser.addini(config_option, config_option_help)
+    parser.addoption("--{}".format(config_option), help=config_option_help)
+
+
+def get_xsd(ci_environment='asc'):
     """Retrieve a XSD for validating JUnitXML results produced by this plug-in.
+
+    Args:
+        ci_environment (str): the value found in the ci-environment global property from the XML
 
     Returns:
         io.BytesIO: A file like stream object.
     """
 
-    return pkg_resources.resource_stream('pytest_rpc', 'data/molecule_junit.xsd')
+    if ci_environment == 'asc':
+        return pkg_resources.resource_stream('pytest_rpc', 'data/molecule_junit.xsd')
+    elif ci_environment == 'mk8s':
+        return pkg_resources.resource_stream('pytest_rpc', 'data/mk8s_junit.xsd')
+    else:
+        raise RuntimeError("Unknown ci-environment '{}'".format(ci_environment))
