@@ -44,7 +44,21 @@ MK8S_ENV_VARS = ['BUILD_URL',
                  'GIT_BRANCH',
                  'GIT_LOCAL_BRANCH',
                  'GIT_AUTHOR_NAME',
-                 'GIT_AUTHOR_EMAIL']
+                 'GIT_AUTHOR_EMAIL',
+                 'BRANCH_NAME',
+                 'CHANGE_AUTHOR_DISPLAY_NAME',
+                 'CHANGE_AUTHOR',
+                 'CHANGE_BRANCH',
+                 'CHANGE_FORK',
+                 'CHANGE_ID',
+                 'CHANGE_TARGET',
+                 'CHANGE_TITLE',
+                 'CHANGE_URL',
+                 'JOB_URL',
+                 'NODE_LABELS',
+                 'NODE_NAME',
+                 'PWD',
+                 'STAGE_NAME']
 
 
 # ======================================================================================================================

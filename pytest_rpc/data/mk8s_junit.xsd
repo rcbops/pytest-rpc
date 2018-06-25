@@ -19,6 +19,20 @@
             <xs:enumeration value="GIT_LOCAL_BRANCH" />
             <xs:enumeration value="GIT_AUTHOR_NAME" />
             <xs:enumeration value="GIT_AUTHOR_EMAIL" />
+            <xs:enumeration value="BRANCH_NAME" />
+            <xs:enumeration value="CHANGE_AUTHOR_DISPLAY_NAME" />
+            <xs:enumeration value="CHANGE_AUTHOR" />
+            <xs:enumeration value="CHANGE_BRANCH" />
+            <xs:enumeration value="CHANGE_FORK" />
+            <xs:enumeration value="CHANGE_ID" />
+            <xs:enumeration value="CHANGE_TARGET" />
+            <xs:enumeration value="CHANGE_TITLE" />
+            <xs:enumeration value="CHANGE_URL" />
+            <xs:enumeration value="JOB_URL" />
+            <xs:enumeration value="NODE_LABELS" />
+            <xs:enumeration value="NODE_NAME" />
+            <xs:enumeration value="PWD" />
+            <xs:enumeration value="STAGE_NAME" />
             <xs:enumeration value="ci-environment" />
         </xs:restriction>
     </xs:simpleType>
@@ -51,7 +65,7 @@
 
     <!--Global properties element containing exactly 15 subelements.-->
     <xs:complexType name="globalPropertiesType">
-        <xs:sequence minOccurs="17" maxOccurs="17">
+        <xs:sequence minOccurs="17" maxOccurs="unbounded">
             <xs:element name="property" type="globalPropertyType" />
         </xs:sequence>
     </xs:complexType>
