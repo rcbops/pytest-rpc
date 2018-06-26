@@ -10,3 +10,4 @@ setuptools
 ipython
 bumpversion
 twine
+sh
