@@ -41,9 +41,9 @@
         <xs:attribute name="value" type="xs:normalizedString" use="required" />
     </xs:complexType>
 
-    <!--Testcase properties element containing at least 4 sub-elements.-->
+    <!--Testcase properties element containing at least 3 sub-elements.-->
     <xs:complexType name="testCasePropertiesType">
-        <xs:sequence minOccurs="4" maxOccurs="unbounded">
+        <xs:sequence minOccurs="3" maxOccurs="unbounded">
             <xs:element name="property" type="testCasePropertyType" />
         </xs:sequence>
     </xs:complexType>
