@@ -50,14 +50,14 @@
 
     <!--Test case.-->
     <xs:complexType name="testCaseType">
-        <xs:all>
-            <xs:element name="error" type="resultType" minOccurs="0" />
-            <xs:element name="skipped" type="resultType" minOccurs="0" />
-            <xs:element name="failure" type="resultType" minOccurs="0" />
-            <xs:element name="system-err" type="xs:string" minOccurs="0" />
-            <xs:element name="system-out" type="xs:string" minOccurs="0" />
+        <xs:sequence>
             <xs:element name="properties" type="testCasePropertiesType" />
-        </xs:all>
+            <xs:element name="error" type="resultType" minOccurs="0" maxOccurs="unbounded" />
+            <xs:element name="skipped" type="resultType" minOccurs="0"  maxOccurs="unbounded" />
+            <xs:element name="failure" type="resultType" minOccurs="0"  maxOccurs="unbounded" />
+            <xs:element name="system-err" type="xs:string" minOccurs="0"  maxOccurs="unbounded" />
+            <xs:element name="system-out" type="xs:string" minOccurs="0"  maxOccurs="unbounded" />
+        </xs:sequence>
         <xs:attribute name="name" type="xs:normalizedString" use="required"/>
         <xs:attribute name="line" type="xs:integer" />
         <xs:attribute name="file" type="xs:normalizedString" />
