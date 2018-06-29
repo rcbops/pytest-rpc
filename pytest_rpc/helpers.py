@@ -42,7 +42,18 @@ def get_osa_version_tuple():
 
 
 def get_id_by_name(service_type, service_name, run_on_host):
-    """Get the id associated with name"""
+    """Get the id associated with name
+
+    Args:
+        service_type (str): The OpenStack object type to query for.
+        service_name (str): The name of the OpenStack object instance to query
+                            for.
+        run_on_host (testinfra.Host): Testinfra host object to execute the
+                                      action on.
+
+    Returns:
+        string: Id of Openstack object instance. None if result not found.
+    """
     cmd = "{} openstack {} show \'{}\' -f json'".format(utility_container,
                                                         service_type,
                                                         service_name)
@@ -59,7 +70,19 @@ def get_id_by_name(service_type, service_name, run_on_host):
 
 
 def create_bootable_volume(data, run_on_host):
-    """Create a bootable volume using a json file"""
+    """Create a bootable volume using a json file
+
+    Args:
+        data (dictionary): Dictionary in the following format:
+                           { 'volume': { 'size': '',
+                                         'imageref': '',
+                                         'name': '',
+                                         'zone': '',
+                                       }
+                           }
+        run_on_host (testinfra.Host): Testinfra host object to execute the
+                                      action on.
+    """
 
     volume_size = data['volume']['size']
     imageRef = data['volume']['imageRef']
@@ -76,14 +99,32 @@ def create_bootable_volume(data, run_on_host):
 
 
 def openstack_name_list(name, run_on_host):
-    """Verify if a volume is existing"""
+    """Get a list of OpenStack object instances of given type.
+
+    Args:
+        name (str): The OpenStack object type to query for.
+        run_on_host (testinfra.Host): Testinfra host object to execute the
+                                      action on.
+
+    Returns:
+        string: List of OpenStack object instances in table format.
+    """
     cmd = "{} openstack {} list'".format(utility_container, name)
     output = run_on_host.run(cmd)
     return output.stdout
 
 
 def delete_volume(volume_name, run_on_host):
-    """Delete volume"""
+    """Delete OpenStack volume
+
+    Args:
+        volume_name (str): OpenStack volume identifier (name or id).
+        run_on_host (testinfra.Host): Testinfra host object to execute the
+                                      action on.
+
+    Raises:
+        AssertionError: If operation unsucessful.
+    """
     volume_id = get_id_by_name('volume', volume_name, run_on_host)
     cmd = "{} openstack volume delete --purge {}'".format(utility_container,
                                                           volume_id)
@@ -92,6 +133,15 @@ def delete_volume(volume_name, run_on_host):
 
 
 def parse_table(ascii_table):
+    """Parse an OpenStack ascii table
+
+    Args:
+        ascii_table (str): OpenStack ascii table.
+
+    Returns:
+        list: List of column headers from table.
+        list: List of column rows from table.
+    """
     header = []
     data = []
     for line in filter(None, ascii_table.split('\n')):
@@ -108,7 +158,14 @@ def parse_table(ascii_table):
 
 
 def generate_random_string(string_length=10):
-    """Returns a random string of length string_length."""
+    """Generate a random string of specified length string_length.
+
+    Args:
+        string_length (int): Size of string to generate.
+
+    Returns:
+        string: Random string
+    """
     random_str = str(uuid.uuid4())
     random_str = random_str.upper()
     random_str = random_str.replace("-", "")
@@ -117,7 +174,21 @@ def generate_random_string(string_length=10):
 
 def get_expected_value(service_type, service_name, key, expected_value,
                        run_on_host, retries=10):
-    """Getting an expected status after retries"""
+    """Getting an expected status after retries
+
+    Args:
+        service_type (str): The OpenStack object type to query for.
+        service_name (str): The name of the OpenStack object instance to query
+                            for.
+        key (str): The OpenStack object instance parameter to check against.
+        expected_value (str): The expected value for the given key.
+        run_on_host (testinfra.Host): Testinfra host object to execute the
+                                      action on.
+        retries (int): The maximum number of retry attempts.
+
+    Returns:
+        boolean: Whether the expected value was found or not.
+    """
     for i in range(0, retries):
         cmd = "{} openstack {} show \'{}\' -f json'".format(utility_container,
                                                             service_type,
@@ -137,7 +208,16 @@ def get_expected_value(service_type, service_name, key, expected_value,
 
 
 def delete_instance(instance_name, run_on_host):
-    """Delete instance"""
+    """Delete OpenStack instance
+
+    Args:
+        instance_name (str): OpenStack server identifier (name or id).
+        run_on_host (testinfra.Host): Testinfra host object to execute the
+                                      action on.
+
+    Raises:
+        AssertionError: If operation unsucessful.
+    """
     instance_id = get_id_by_name('server', instance_name, run_on_host)
     cmd = "{} openstack server delete {}'".format(utility_container,
                                                   instance_id)
