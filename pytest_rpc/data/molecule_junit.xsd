@@ -1,26 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
     <!--SIMPLE TYPES-->
-    <xs:simpleType name="validGlobalProperty">
-        <xs:restriction base="xs:normalizedString">
-            <xs:enumeration value="BUILD_URL" />
-            <xs:enumeration value="BUILD_NUMBER" />
-            <xs:enumeration value="RE_JOB_ACTION" />
-            <xs:enumeration value="RE_JOB_IMAGE" />
-            <xs:enumeration value="RE_JOB_SCENARIO" />
-            <xs:enumeration value="RE_JOB_BRANCH" />
-            <xs:enumeration value="RPC_RELEASE" />
-            <xs:enumeration value="RPC_PRODUCT_RELEASE" />
-            <xs:enumeration value="OS_ARTIFACT_SHA" />
-            <xs:enumeration value="PYTHON_ARTIFACT_SHA" />
-            <xs:enumeration value="APT_ARTIFACT_SHA" />
-            <xs:enumeration value="REPO_URL" />
-            <xs:enumeration value="JOB_NAME" />
-            <xs:enumeration value="MOLECULE_TEST_REPO" />
-            <xs:enumeration value="MOLECULE_SCENARIO_NAME" />
-            <xs:enumeration value="ci-environment" />
-        </xs:restriction>
-    </xs:simpleType>
 
     <xs:simpleType name="validTestcaseProperty">
         <xs:restriction base="xs:normalizedString">
@@ -44,13 +24,13 @@
     
     <!--Global property element with required attributes.-->
     <xs:complexType name="globalPropertyType">
-        <xs:attribute name="name" type="validGlobalProperty" use="required" />
+        <xs:attribute name="name" type="xs:normalizedString" use="required" />
         <xs:attribute name="value" type="xs:normalizedString" use="required" />
     </xs:complexType>
 
-    <!--Global properties element containing exactly 15 subelements.-->
+    <!--Global properties element containing at least one sub-element.-->
     <xs:complexType name="globalPropertiesType">
-        <xs:sequence minOccurs="16" maxOccurs="16">
+        <xs:sequence maxOccurs="unbounded">
             <xs:element name="property" type="globalPropertyType" />
         </xs:sequence>
     </xs:complexType>
@@ -61,23 +41,23 @@
         <xs:attribute name="value" type="xs:normalizedString" use="required" />
     </xs:complexType>
 
-    <!--Testcase properties element containing at least 4 sub-elements.-->
+    <!--Testcase properties element containing at least 3 sub-elements.-->
     <xs:complexType name="testCasePropertiesType">
-        <xs:sequence minOccurs="4" maxOccurs="unbounded">
+        <xs:sequence minOccurs="3" maxOccurs="unbounded">
             <xs:element name="property" type="testCasePropertyType" />
         </xs:sequence>
     </xs:complexType>
 
     <!--Test case.-->
     <xs:complexType name="testCaseType">
-        <xs:all>
-            <xs:element name="error" type="resultType" minOccurs="0" />
-            <xs:element name="skipped" type="resultType" minOccurs="0" />
-            <xs:element name="failure" type="resultType" minOccurs="0" />
-            <xs:element name="system-err" type="xs:string" minOccurs="0" />
-            <xs:element name="system-out" type="xs:string" minOccurs="0" />
+        <xs:sequence>
             <xs:element name="properties" type="testCasePropertiesType" />
-        </xs:all>
+            <xs:element name="error" type="resultType" minOccurs="0" maxOccurs="unbounded" />
+            <xs:element name="skipped" type="resultType" minOccurs="0"  maxOccurs="unbounded" />
+            <xs:element name="failure" type="resultType" minOccurs="0"  maxOccurs="unbounded" />
+            <xs:element name="system-out" type="xs:string" minOccurs="0"  maxOccurs="unbounded" />
+            <xs:element name="system-err" type="xs:string" minOccurs="0"  maxOccurs="unbounded" />
+        </xs:sequence>
         <xs:attribute name="name" type="xs:normalizedString" use="required"/>
         <xs:attribute name="line" type="xs:integer" />
         <xs:attribute name="file" type="xs:normalizedString" />
@@ -90,8 +70,8 @@
     <!--Test suite.-->
     <xs:complexType name="testSuiteType">
         <xs:sequence>
-            <xs:element name="system-err" type="xs:string" minOccurs="0" />
             <xs:element name="system-out" type="xs:string" minOccurs="0" />
+            <xs:element name="system-err" type="xs:string" minOccurs="0" />
             <xs:element name="properties" type="globalPropertiesType" />
             <xs:element name="testcase" type="testCaseType" maxOccurs="unbounded" />
         </xs:sequence>

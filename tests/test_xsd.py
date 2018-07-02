@@ -77,104 +77,11 @@ def test_multiple_jira_references(testdir):
     xmlschema.assertValid(xml_doc)
 
 
-def test_missing_global_property(testdir, properly_decorated_test_function, mocker):
-    """Verify that XSD will enforce the presence of all required global test suite properties."""
-
-    # Mock
-    # Missing 'BUILD_URL'
-    mock_env_vars = [x for x in TEST_ENV_VARS if x != 'BUILD_URL']
-
-    mocker.patch('pytest_rpc.ASC_ENV_VARS', mock_env_vars)
-
-    # Setup
-    testdir.makepyfile(properly_decorated_test_function.format(test_name='test_missing_global',
-                                                               test_id='123e4567-e89b-12d3-a456-426655440000',
-                                                               jira_id='ASC-123'))
-
-    xml_doc = run_and_parse(testdir).xml_doc
-    xmlschema = etree.XMLSchema(etree.parse(get_xsd()))
-
-    # Test
-    assert xmlschema.validate(xml_doc) is False
-
-
-def test_extra_global_property(testdir, properly_decorated_test_function, mocker):
-    """Verify that XSD will enforce the strict presence of only required global test suite properties."""
-
-    # Mock
-    # Extra 'BUILD_URL'
-    mock_env_vars = TEST_ENV_VARS + ['BUILD_URL']
-
-    mocker.patch('pytest_rpc.ASC_ENV_VARS', mock_env_vars)
-
-    # Setup
-    testdir.makepyfile(properly_decorated_test_function.format(test_name='test_extra_global',
-                                                               test_id='123e4567-e89b-12d3-a456-426655440000',
-                                                               jira_id='ASC-123'))
-
-    xml_doc = run_and_parse(testdir).xml_doc
-    xmlschema = etree.XMLSchema(etree.parse(get_xsd()))
-
-    # Test
-    assert xmlschema.validate(xml_doc) is False
-
-
-def test_typo_global_property(testdir, properly_decorated_test_function, mocker):
-    """Verify that XSD will enforce the only certain property names are allowed for the test suite."""
-
-    # Mock
-    # Typo for RPC_RELEASE
-    mock_env_vars = [x for x in TEST_ENV_VARS if x != 'RPC_RELEASE'] + ['RCP_RELEASE']
-
-    mocker.patch('pytest_rpc.ASC_ENV_VARS', mock_env_vars)
-
-    # Setup
-    testdir.makepyfile(properly_decorated_test_function.format(test_name='test_typo_global',
-                                                               test_id='123e4567-e89b-12d3-a456-426655440000',
-                                                               jira_id='ASC-123'))
-
-    xml_doc = run_and_parse(testdir).xml_doc
-    xmlschema = etree.XMLSchema(etree.parse(get_xsd()))
-
-    # Test
-    assert xmlschema.validate(xml_doc) is False
-
-
 def test_missing_required_marks(testdir, undecorated_test_function):
     """Verify that XSD will enforce the presence of 'test_id' and 'jira_id' properties for test cases."""
 
     # Setup
     testdir.makepyfile(undecorated_test_function.format(test_name='test_typo_global'))
-
-    xml_doc = run_and_parse(testdir).xml_doc
-    xmlschema = etree.XMLSchema(etree.parse(get_xsd()))
-
-    # Test
-    assert xmlschema.validate(xml_doc) is False
-
-
-def test_missing_uuid_mark(testdir, single_decorated_test_function):
-    """Verify that XSD will enforce the presence of 'test_id' property for test cases."""
-
-    # Setup
-    testdir.makepyfile(single_decorated_test_function.format(test_name='test_missing_uuid',
-                                                             mark_type='jira',
-                                                             mark_arg='ASC-123'))
-
-    xml_doc = run_and_parse(testdir).xml_doc
-    xmlschema = etree.XMLSchema(etree.parse(get_xsd()))
-
-    # Test
-    assert xmlschema.validate(xml_doc) is False
-
-
-def test_missing_jira_mark(testdir, single_decorated_test_function):
-    """Verify that XSD will enforce the presence of 'jira' property for test cases."""
-
-    # Setup
-    testdir.makepyfile(single_decorated_test_function.format(test_name='test_missing_jira',
-                                                             mark_type='test_id',
-                                                             mark_arg='123e4567-e89b-12d3-a456-426655440000'))
 
     xml_doc = run_and_parse(testdir).xml_doc
     xmlschema = etree.XMLSchema(etree.parse(get_xsd()))
