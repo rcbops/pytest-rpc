@@ -55,8 +55,8 @@
             <xs:element name="error" type="resultType" minOccurs="0" maxOccurs="unbounded" />
             <xs:element name="skipped" type="resultType" minOccurs="0"  maxOccurs="unbounded" />
             <xs:element name="failure" type="resultType" minOccurs="0"  maxOccurs="unbounded" />
-            <xs:element name="system-err" type="xs:string" minOccurs="0"  maxOccurs="unbounded" />
             <xs:element name="system-out" type="xs:string" minOccurs="0"  maxOccurs="unbounded" />
+            <xs:element name="system-err" type="xs:string" minOccurs="0"  maxOccurs="unbounded" />
         </xs:sequence>
         <xs:attribute name="name" type="xs:normalizedString" use="required"/>
         <xs:attribute name="line" type="xs:integer" />
@@ -70,8 +70,8 @@
     <!--Test suite.-->
     <xs:complexType name="testSuiteType">
         <xs:sequence>
-            <xs:element name="system-err" type="xs:string" minOccurs="0" />
             <xs:element name="system-out" type="xs:string" minOccurs="0" />
+            <xs:element name="system-err" type="xs:string" minOccurs="0" />
             <xs:element name="properties" type="globalPropertiesType" />
             <xs:element name="testcase" type="testCaseType" maxOccurs="unbounded" />
         </xs:sequence>
