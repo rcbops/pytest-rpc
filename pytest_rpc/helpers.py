@@ -123,12 +123,13 @@ def delete_volume(volume_name, run_on_host):
                                       action on.
 
     Raises:
-        AssertionError: If operation unsucessful.
+        AssertionError: If operation unsuccessful.
     """
     volume_id = get_id_by_name('volume', volume_name, run_on_host)
     cmd = "{} openstack volume delete --purge {}'".format(utility_container,
                                                           volume_id)
     output = run_on_host.run(cmd)
+    sleep(10)
     assert volume_name not in output.stdout
 
 
@@ -216,10 +217,162 @@ def delete_instance(instance_name, run_on_host):
                                       action on.
 
     Raises:
-        AssertionError: If operation unsucessful.
+        AssertionError: If operation unsuccessful.
     """
     instance_id = get_id_by_name('server', instance_name, run_on_host)
     cmd = "{} openstack server delete {}'".format(utility_container,
                                                   instance_id)
     output = run_on_host.run(cmd)
+    sleep(10)
     assert instance_name not in output.stdout
+
+
+def create_instance(data, run_on_host):
+    """Create an instance from source (a glance image or a snapshot)
+
+    Args:
+        data (dict): a dictionary of data. A sample of data as below:
+                    data_image = {
+                        "instance_name": instance_name,
+                        "from_source": 'image',
+                        "source_name": image_name,
+                        "flavor": flavor,
+                        "network_name": network,
+                    }
+        run_on_host (testinfra.host.Host): A hostname where the command is being executed.
+
+    Example:
+    `openstack server create --image <image_id> flavor <flavor> network <network_name> server/instance_name`
+    `openstack server create --snapshot <snapshot_id> flavor <flavor> network <network_name> server/instance_name`
+    """
+    from_source = data['from_source']
+    source_id = get_id_by_name(str(data['from_source']), str(data['source_name']), run_on_host)
+    flavor = data['flavor']
+    network_id = get_id_by_name('network', str(data['network_name']), run_on_host)
+    instance_name = data['instance_name']
+
+    cmd = "{} openstack server create --{} {} --flavor {} --nic net-id={} {}'"\
+        .format(utility_container, from_source, source_id, flavor, network_id, instance_name)
+
+    run_on_host.run_expect([0], cmd)
+    sleep(10)
+
+
+def verify_asset_in_list(service_type, service_name, run_on_host):
+    """Verify if a volume/server/image is existing
+
+    Args:
+        service_type (str): The OpenStack object type to query for.
+        service_name (str): The name of the OpenStack object to query for.
+        run_on_host (testinfra.Host): Testinfra host object to execute the action on.
+
+    Returns:
+        boolean: Whether the expected asset was found or not.
+    """
+    cmd = "{} openstack {} list'".format(utility_container, service_type)
+    output = run_on_host.run(cmd)
+    if service_name in output.stdout:
+        return True
+    else:
+        return False
+
+
+def stop_server_instance(instance_name, run_on_host):
+    """Stop an OpenStack server/instance
+
+    Args:
+        instance_name (str): The name of the OpenStack instance to be stopped.
+        run_on_host (testinfra.Host): Testinfra host object to execute the action on.
+    """
+    instance_id = get_id_by_name('server', instance_name, run_on_host)
+
+    cmd = "{} openstack server stop {}'".format(utility_container, instance_id)
+    run_on_host.run_expect([0], cmd)
+
+
+def create_snapshot_from_instance(snapshot_name, instance_name, run_on_host):
+    """Create snapshot on an instance
+
+    Args:
+        snapshot_name (str): The name of the OpenStack snapshot to be created.
+        instance_name (str): The name of the OpenStack instance from which the snapshot is created.
+        run_on_host (testinfra.Host): Testinfra host object to execute the action on.
+    """
+    instance_id = get_id_by_name('server', instance_name, run_on_host)
+    cmd = "{} openstack server image create --name {} {}'".format(utility_container, snapshot_name, instance_id)
+
+    run_on_host.run_expect([0], cmd)
+    sleep(10)
+
+
+def delete_it(service_type, service_name, run_on_host):
+    """Delete an OpenStack object
+
+    Args:
+        service_type (str): The OpenStack object type to query for.
+        service_name (str): The name of the OpenStack object to query for.
+        run_on_host (testinfra.Host): Testinfra host object to execute the action on.
+
+    Raises:
+        AssertionError: If operation is unsuccessful. """
+
+    sleep(15)
+    id = get_id_by_name(service_type, service_name, run_on_host)
+    cmd = "{} openstack {} delete {}'".format(utility_container, service_type, id)
+    run_on_host.run_expect([0], cmd)
+    sleep(20)
+
+    assert not verify_asset_in_list(service_type, service_name, run_on_host)
+
+
+def create_floating_ip(network_name, run_on_host):
+    """Create floating IP on a network
+
+    Args:
+        network_name (str): The name of the OpenStack network object on which the floating IP is created.
+        run_on_host (testinfra.Host): Testinfra host object to execute the action on.
+
+    Raises:
+        ValueError: If it has the right type but an inappropriate value.
+
+    Returns:
+        str: The newly created floating ip name
+    """
+
+    network_id = get_id_by_name('network', network_name, run_on_host)
+    assert network_id is not None
+
+    cmd = "{} openstack floating ip create {} -f json'".format(utility_container, network_id)
+    output = run_on_host.run(cmd)
+
+    assert (output.rc == 0)
+
+    try:
+        result = json.loads(output.stdout)
+    except ValueError:
+        return
+
+    if 'name' in result:
+        return result['name']
+    else:
+        return
+
+
+def ping_ip_from_host(ip, run_on_host):
+    """Verify the IP address can be pinged from host
+
+    Args:
+        ip (str): The string of the pinged IP address
+        run_on_host (testinfra.Host): Testinfra host object to execute the action on.
+
+    Returns:
+        boolean: Whether the IP address can be pinged or not
+    """
+
+    cmd = "{} ping -c1 {}'".format(utility_container, ip)
+    output = run_on_host.run(cmd)
+
+    if output.rc == 0:
+        return True
+    else:
+        return False
