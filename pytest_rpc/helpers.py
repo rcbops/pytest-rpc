@@ -130,7 +130,7 @@ def delete_volume(volume_name, run_on_host):
                                                           volume_id)
     run_on_host.run_expect([0], cmd)
 
-    assert not (verify_asset_in_list('volume', volume_name, run_on_host))
+    assert (asset_not_in_the_list('volume', volume_name, run_on_host))
 
 
 def parse_table(ascii_table):
@@ -224,7 +224,7 @@ def delete_instance(instance_name, run_on_host):
                                                   instance_id)
     run_on_host.run_expect([0], cmd)
 
-    assert not (verify_asset_in_list('server', instance_name, run_on_host))
+    assert (asset_not_in_the_list('server', instance_name, run_on_host))
 
 
 def create_instance(data, run_on_host):
@@ -254,28 +254,65 @@ def create_instance(data, run_on_host):
     run_on_host.run_expect([0], cmd)
 
 
-def verify_asset_in_list(service_type, service_name, run_on_host, retries=10):
+def verify_asset_in_list(service_type, service_name, expected_asset, run_on_host, retries=10):
     """Verify if a volume/server/image is existing
 
     Args:
         service_type (str): The OpenStack object type to query for.
         service_name (str): The name of the OpenStack object to query for.
+        expected_asset (bool): Whether or not the asset is expected in the list
         run_on_host (testinfra.Host): Testinfra host object to execute the action on.
         retries (int): The maximum number of retry attempts.
 
     Returns:
-        boolean: Whether the expected asset was found or not.
+        bool: Whether the expected asset was found or not.
     """
+
     for i in range(0, retries):
         cmd = "{} openstack {} list'".format(utility_container, service_type)
         output = run_on_host.run(cmd)
 
-        if service_name in output.stdout:
-            return True
+        if expected_asset:
+            if service_name in output.stdout:
+                return True
+            else:
+                sleep(2)
         else:
-            sleep(2)
-
+            if service_name not in output.stdout:
+                return True
+            else:
+                sleep(2)
     return False
+
+
+def asset_is_in_the_list(service_type, service_name, run_on_host):
+    """ Verify if the asset is IN the list
+
+    Args:
+        service_type (str): The OpenStack object type to query for.
+        service_name (str): The name of the OpenStack object to query for.
+        run_on_host (testinfra.Host): Testinfra host object to execute the action on.
+
+    Returns:
+        bool: True if the asset is IN the list, False if the asset is not in the list
+
+    """
+    verify_asset_in_list(service_type, service_name, True, run_on_host)
+
+
+def asset_not_in_the_list(service_type, service_name, run_on_host):
+    """ Verify if the asset in NOT in the list
+
+        Args:
+            service_type (str): The OpenStack object type to query for.
+            service_name (str): The name of the OpenStack object to query for.
+            run_on_host (testinfra.Host): Testinfra host object to execute the action on.
+
+        Returns:
+            bool: True if the asset is NOT in the list, False if the asset is in the list
+
+        """
+    verify_asset_in_list(service_type, service_name, False, run_on_host)
 
 
 def stop_server_instance(instance_name, run_on_host):
@@ -320,7 +357,7 @@ def delete_it(service_type, service_name, run_on_host):
     cmd = "{} openstack {} delete {}'".format(utility_container, service_type, service_id)
     run_on_host.run_expect([0], cmd)
 
-    assert not (verify_asset_in_list(service_type, service_name, run_on_host))
+    assert (asset_not_in_the_list(service_type, service_name, run_on_host))
 
 
 def create_floating_ip(network_name, run_on_host):
