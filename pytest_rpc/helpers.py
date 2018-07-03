@@ -128,8 +128,9 @@ def delete_volume(volume_name, run_on_host):
     volume_id = get_id_by_name('volume', volume_name, run_on_host)
     cmd = "{} openstack volume delete --purge {}'".format(utility_container,
                                                           volume_id)
-    output = run_on_host.run(cmd)
-    assert volume_name not in output.stdout
+    run_on_host.run_expect([0], cmd)
+
+    assert (verify_if_deleted('volume', volume_name, run_on_host))
 
 
 def parse_table(ascii_table):
