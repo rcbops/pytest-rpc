@@ -129,7 +129,6 @@ def delete_volume(volume_name, run_on_host):
     cmd = "{} openstack volume delete --purge {}'".format(utility_container,
                                                           volume_id)
     output = run_on_host.run(cmd)
-    sleep(10)
     assert volume_name not in output.stdout
 
 
@@ -222,9 +221,35 @@ def delete_instance(instance_name, run_on_host):
     instance_id = get_id_by_name('server', instance_name, run_on_host)
     cmd = "{} openstack server delete {}'".format(utility_container,
                                                   instance_id)
-    output = run_on_host.run(cmd)
-    sleep(10)
-    assert instance_name not in output.stdout
+    run_on_host.run_expect([0], cmd)
+
+    assert (verify_if_deleted('server', instance_name, run_on_host))
+
+
+def verify_if_deleted(service_type, service_name, run_on_host, retries=10):
+    """Verify if an OpenStack object is completely deleted
+
+    Args:
+        service_type (str): The OpenStack object type to query for.
+        service_name (str): The name of the OpenStack object to query for.
+        run_on_host (testinfra.Host): Testinfra host object to execute the
+                                      action on.
+        retries (int): The maximum number of retry attempts.
+
+    Returns:
+        boolean: Whether the expected object is completely deleted
+
+    """
+    for i in range(0, retries):
+        cmd = "{} openstack {} list'".format(utility_container, service_type)
+        output = run_on_host.run(cmd)
+
+        if service_name in output.stdout:
+            return True
+        else:
+            sleep(2)
+
+    return False
 
 
 def create_instance(data, run_on_host):
@@ -232,30 +257,26 @@ def create_instance(data, run_on_host):
 
     Args:
         data (dict): a dictionary of data. A sample of data as below:
-                    data_image = {
-                        "instance_name": instance_name,
+                    data = {
+                        "instance_name": 'instance_name',
                         "from_source": 'image',
-                        "source_name": image_name,
-                        "flavor": flavor,
-                        "network_name": network,
+                        "source_name": 'image_name',
+                        "flavor": 'flavor',
+                        "network_name": 'network',
                     }
         run_on_host (testinfra.host.Host): A hostname where the command is being executed.
 
     Example:
-    `openstack server create --image <image_id> flavor <flavor> network <network_name> server/instance_name`
-    `openstack server create --snapshot <snapshot_id> flavor <flavor> network <network_name> server/instance_name`
+    `openstack server create --image <image_id> flavor <flavor> --nic <net-id=network_id> server/instance_name`
+    `openstack server create --snapshot <snapshot_id> flavor <flavor> --nic <net-id=network_id> server/instance_name`
     """
-    from_source = data['from_source']
-    source_id = get_id_by_name(str(data['from_source']), str(data['source_name']), run_on_host)
-    flavor = data['flavor']
-    network_id = get_id_by_name('network', str(data['network_name']), run_on_host)
-    instance_name = data['instance_name']
+    source_id = get_id_by_name(data['from_source'], data['source_name'], run_on_host)
+    network_id = get_id_by_name('network', data['network_name'], run_on_host)
 
     cmd = "{} openstack server create --{} {} --flavor {} --nic net-id={} {}'"\
-        .format(utility_container, from_source, source_id, flavor, network_id, instance_name)
+        .format(utility_container, data['from_source'], source_id, data['flavor'], network_id, data['instance_name'])
 
     run_on_host.run_expect([0], cmd)
-    sleep(10)
 
 
 def verify_asset_in_list(service_type, service_name, run_on_host):
@@ -302,7 +323,6 @@ def create_snapshot_from_instance(snapshot_name, instance_name, run_on_host):
     cmd = "{} openstack server image create --name {} {}'".format(utility_container, snapshot_name, instance_id)
 
     run_on_host.run_expect([0], cmd)
-    sleep(10)
 
 
 def delete_it(service_type, service_name, run_on_host):
@@ -316,13 +336,11 @@ def delete_it(service_type, service_name, run_on_host):
     Raises:
         AssertionError: If operation is unsuccessful. """
 
-    sleep(15)
-    id = get_id_by_name(service_type, service_name, run_on_host)
-    cmd = "{} openstack {} delete {}'".format(utility_container, service_type, id)
+    service_id = get_id_by_name(service_type, service_name, run_on_host)
+    cmd = "{} openstack {} delete {}'".format(utility_container, service_type, service_id)
     run_on_host.run_expect([0], cmd)
-    sleep(20)
 
-    assert not verify_asset_in_list(service_type, service_name, run_on_host)
+    assert (verify_if_deleted(service_type, service_name, run_on_host))
 
 
 def create_floating_ip(network_name, run_on_host):
@@ -333,10 +351,11 @@ def create_floating_ip(network_name, run_on_host):
         run_on_host (testinfra.Host): Testinfra host object to execute the action on.
 
     Raises:
-        ValueError: If it has the right type but an inappropriate value.
+        AssertionError: If operation is unsuccessful.
 
     Returns:
         str: The newly created floating ip name
+        None: If failed to create the floating IP
     """
 
     network_id = get_id_by_name('network', network_name, run_on_host)
@@ -354,12 +373,10 @@ def create_floating_ip(network_name, run_on_host):
 
     if 'name' in result:
         return result['name']
-    else:
-        return
 
 
-def ping_ip_from_host(ip, run_on_host):
-    """Verify the IP address can be pinged from host
+def ping_ip_from_utility_container(ip, run_on_host):
+    """Verify the IP address can be pinged from utility container on a host
 
     Args:
         ip (str): The string of the pinged IP address
