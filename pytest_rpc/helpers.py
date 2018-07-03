@@ -130,7 +130,7 @@ def delete_volume(volume_name, run_on_host):
                                                           volume_id)
     run_on_host.run_expect([0], cmd)
 
-    assert (verify_if_deleted('volume', volume_name, run_on_host))
+    assert not (verify_asset_in_list('volume', volume_name, run_on_host))
 
 
 def parse_table(ascii_table):
@@ -224,33 +224,7 @@ def delete_instance(instance_name, run_on_host):
                                                   instance_id)
     run_on_host.run_expect([0], cmd)
 
-    assert (verify_if_deleted('server', instance_name, run_on_host))
-
-
-def verify_if_deleted(service_type, service_name, run_on_host, retries=10):
-    """Verify if an OpenStack object is completely deleted
-
-    Args:
-        service_type (str): The OpenStack object type to query for.
-        service_name (str): The name of the OpenStack object to query for.
-        run_on_host (testinfra.Host): Testinfra host object to execute the
-                                      action on.
-        retries (int): The maximum number of retry attempts.
-
-    Returns:
-        boolean: Whether the expected object is completely deleted
-
-    """
-    for i in range(0, retries):
-        cmd = "{} openstack {} list'".format(utility_container, service_type)
-        output = run_on_host.run(cmd)
-
-        if service_name in output.stdout:
-            return True
-        else:
-            sleep(2)
-
-    return False
+    assert not (verify_asset_in_list('server', instance_name, run_on_host))
 
 
 def create_instance(data, run_on_host):
@@ -280,23 +254,28 @@ def create_instance(data, run_on_host):
     run_on_host.run_expect([0], cmd)
 
 
-def verify_asset_in_list(service_type, service_name, run_on_host):
+def verify_asset_in_list(service_type, service_name, run_on_host, retries=10):
     """Verify if a volume/server/image is existing
 
     Args:
         service_type (str): The OpenStack object type to query for.
         service_name (str): The name of the OpenStack object to query for.
         run_on_host (testinfra.Host): Testinfra host object to execute the action on.
+        retries (int): The maximum number of retry attempts.
 
     Returns:
         boolean: Whether the expected asset was found or not.
     """
-    cmd = "{} openstack {} list'".format(utility_container, service_type)
-    output = run_on_host.run(cmd)
-    if service_name in output.stdout:
-        return True
-    else:
-        return False
+    for i in range(0, retries):
+        cmd = "{} openstack {} list'".format(utility_container, service_type)
+        output = run_on_host.run(cmd)
+
+        if service_name in output.stdout:
+            return True
+        else:
+            sleep(2)
+
+    return False
 
 
 def stop_server_instance(instance_name, run_on_host):
@@ -341,7 +320,7 @@ def delete_it(service_type, service_name, run_on_host):
     cmd = "{} openstack {} delete {}'".format(utility_container, service_type, service_id)
     run_on_host.run_expect([0], cmd)
 
-    assert (verify_if_deleted(service_type, service_name, run_on_host))
+    assert not (verify_asset_in_list(service_type, service_name, run_on_host))
 
 
 def create_floating_ip(network_name, run_on_host):
