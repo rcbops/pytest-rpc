@@ -254,7 +254,7 @@ def create_instance(data, run_on_host):
     run_on_host.run_expect([0], cmd)
 
 
-def verify_asset_in_list(service_type, service_name, expected_asset, run_on_host, retries=10):
+def _asset_in_list(service_type, service_name, expected_asset, run_on_host, retries=10):
     """Verify if a volume/server/image is existing
 
     Args:
@@ -269,16 +269,25 @@ def verify_asset_in_list(service_type, service_name, expected_asset, run_on_host
     """
 
     for i in range(0, retries):
-        cmd = "{} openstack {} list'".format(utility_container, service_type)
-        output = run_on_host.run(cmd)
 
+        output = openstack_name_list(service_type, run_on_host)
+
+        # Expecting that asset is in the list, for example after creating an asset, it is not shown in the list until
+        # several seconds later, retry every 2 seconds until reaching max retries (default = 10) to ensure the expected
+        # asset seen in the list.
+        # TODO: Create unit tests for this scenario
         if expected_asset:
-            if service_name in output.stdout:
+            if service_name in output:
                 return True
             else:
                 sleep(2)
+
+        # Expecting that asset is NOT in the list, for example after deleting an asset, it is STILL shown in the list
+        # until several seconds later, retry every 2 seconds until reaching max retries (default = 10) to ensure the
+        # asset is removed from the list
+        # TODO: Create unit tests for this scenario
         else:
-            if service_name not in output.stdout:
+            if service_name not in output:
                 return True
             else:
                 sleep(2)
@@ -297,7 +306,7 @@ def asset_is_in_the_list(service_type, service_name, run_on_host):
         bool: True if the asset is IN the list, False if the asset is not in the list
 
     """
-    verify_asset_in_list(service_type, service_name, True, run_on_host)
+    _asset_in_list(service_type, service_name, True, run_on_host)
 
 
 def asset_not_in_the_list(service_type, service_name, run_on_host):
@@ -312,7 +321,7 @@ def asset_not_in_the_list(service_type, service_name, run_on_host):
             bool: True if the asset is NOT in the list, False if the asset is in the list
 
         """
-    verify_asset_in_list(service_type, service_name, False, run_on_host)
+    _asset_in_list(service_type, service_name, False, run_on_host)
 
 
 def stop_server_instance(instance_name, run_on_host):
