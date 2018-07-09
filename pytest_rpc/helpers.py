@@ -203,12 +203,8 @@ def get_expected_value(service_type, service_name, key, expected_value,
             else:
                 sleep(6)
         else:
-            # Printing out logs if failed
-            print("\n===== Debug: get_expected_value logs =====")
-            print("\ncmd=" + cmd)
-            print("\nOutput:" + result)
-            print("\n===== End of get_expected_value logs =====")
-            return False
+            print("\n Key not found: {}\n".format(key))
+            break
 
     # Printing out logs if failed
     print("\n===== Debug: get_expected_value logs =====")
