@@ -191,17 +191,22 @@ def get_expected_value(service_type, service_name, key, expected_value,
         boolean: Whether the expected value was found or not.
     """
     for i in range(0, retries):
+        sleep(6)
         cmd = "{} openstack {} show \'{}\' -f json'".format(utility_container,
                                                             service_type,
                                                             service_name)
         output = run_on_host.run(cmd)
-        result = json.loads(output.stdout)
+        try:
+            result = json.loads(output.stdout)
+        except ValueError as e:
+            result = str(e)
+            continue
 
         if key in result:
             if result[key] == expected_value:
                 return True
             else:
-                sleep(6)
+                continue
         else:
             print("\n Key not found: {}\n".format(key))
             break
