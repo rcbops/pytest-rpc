@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
 import pytest_rpc.helpers
 import pytest
-from testinfra.backend.base import CommandResult
-from testinfra.host import Host
-from testinfra.backend.base import BaseBackend
+import testinfra.backend.base
+import testinfra.host
 
 """Test cases for the 'create_bootable_volume' helper function."""
 
@@ -15,9 +14,9 @@ def test_success(mocker):
     relies on mocked objects from testinfra
     """
 
-    fake_backend = mocker.Mock(spec=BaseBackend)
-    myhost = Host(fake_backend)
-    command_result = mocker.Mock(spec=CommandResult)
+    fake_backend = mocker.Mock(spec=testinfra.backend.base.BaseBackend)
+    myhost = testinfra.host.Host(fake_backend)
+    command_result = mocker.Mock(spec=testinfra.backend.base.CommandResult)
 
     command_result.rc = 0
     mocker.patch('testinfra.host.Host.run', return_value=command_result)
@@ -40,9 +39,9 @@ def test_failure(mocker):
     relies on mocked objects from testinfra
     """
 
-    fake_backend = mocker.Mock(spec=BaseBackend)
-    myhost = Host(fake_backend)
-    command_result = mocker.Mock(spec=CommandResult)
+    fake_backend = mocker.Mock(spec=testinfra.backend.base.BaseBackend)
+    myhost = testinfra.host.Host(fake_backend)
+    command_result = mocker.Mock(spec=testinfra.backend.base.CommandResult)
 
     command_result.rc = 2
     mocker.patch('testinfra.host.Host.run', return_value=command_result)
