@@ -165,7 +165,7 @@ def generate_random_string(string_length=10):
         string_length (int): Size of string to generate.
 
     Returns:
-        string: Random string
+        string: Random string of specified length (maximum of 32 characters)
     """
     random_str = str(uuid.uuid4())
     random_str = random_str.upper()
