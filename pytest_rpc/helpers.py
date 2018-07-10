@@ -213,8 +213,8 @@ def get_expected_value(service_type, service_name, key, expected_value,
 
     # Printing out logs if failed
     print("\n===== Debug: get_expected_value logs =====")
-    print("\ncmd=" + cmd)
-    print("\nOutput:" + result)
+    print("\ncmd = {}".format(cmd))
+    print("\nOutput:\n {}".format(result))
     print("\n===== End of get_expected_value logs =====")
     return False
 
@@ -317,7 +317,7 @@ def asset_is_in_the_list(service_type, service_name, run_on_host):
         bool: True if the asset is IN the list, False if the asset is not in the list
 
     """
-    _asset_in_list(service_type, service_name, True, run_on_host)
+    return _asset_in_list(service_type, service_name, True, run_on_host)
 
 
 def asset_not_in_the_list(service_type, service_name, run_on_host):
@@ -332,7 +332,7 @@ def asset_not_in_the_list(service_type, service_name, run_on_host):
             bool: True if the asset is NOT in the list, False if the asset is in the list
 
         """
-    _asset_in_list(service_type, service_name, False, run_on_host)
+    return _asset_in_list(service_type, service_name, False, run_on_host)
 
 
 def stop_server_instance(instance_name, run_on_host):
