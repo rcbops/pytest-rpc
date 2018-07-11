@@ -11,3 +11,4 @@ ipython
 bumpversion
 twine
 sh
+testinfra
