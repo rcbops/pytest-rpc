@@ -252,6 +252,9 @@ def create_instance(data, run_on_host):
                     }
         run_on_host (testinfra.host.Host): A hostname where the command is being executed.
 
+    Raises:
+        AssertionError: If operation is unsuccessful.
+
     Example:
     `openstack server create --image <image_id> flavor <flavor> --nic <net-id=network_id> server/instance_name`
     `openstack server create --snapshot <snapshot_id> flavor <flavor> --nic <net-id=network_id> server/instance_name`

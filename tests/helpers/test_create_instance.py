@@ -9,8 +9,8 @@ import testinfra.host
 
 
 def test_success(mocker):
-    """Verify create_instance completes without raising an error and returns
-    None when the OpenStack command returns an exit code of '0'.
+    """Verify create_instance returns None when the OpenStack command returns
+    an exit code of '0'.
 
     relies on mocked objects from testinfra
     """
@@ -36,13 +36,11 @@ def test_success(mocker):
 
 
 def test_failure(mocker):
-    """Verify create_instance raises an error when the OpenStack command
-    returns an exit code of '2'.
+    """Verify create_instance raises an AssertionError when the server instance
+    has failed to be successfully created.
 
     relies on mocked objects from testinfra
     """
-    """Verify create_instance raises and AssertionError when server instance
-    has failed to be successfully created."""
 
     fake_backend = mocker.Mock(spec=testinfra.backend.base.BaseBackend)
     myhost = testinfra.host.Host(fake_backend)
