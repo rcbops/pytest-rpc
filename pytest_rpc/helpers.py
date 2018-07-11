@@ -151,10 +151,13 @@ def parse_table(ascii_table):
         if not header:
             header = list(filter(lambda x: x != '|', line.split()))
             continue
-        data.append([''] * len(header))
+        data_row = []
         splitted_line = list(filter(lambda x: x != '|', line.split()))
         for i in range(len(splitted_line)):
-            data[-1][i] = splitted_line[i]
+            data_row.append(splitted_line[i])
+        while len(data_row) < len(header):
+            data_row.append('')
+        data.append(data_row)
     return header, data
 
 
