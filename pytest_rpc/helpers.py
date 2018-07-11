@@ -149,10 +149,10 @@ def parse_table(ascii_table):
         if '-+-' in line:
             continue
         if not header:
-            header = filter(lambda x: x != '|', line.split())
+            header = list(filter(lambda x: x != '|', line.split()))
             continue
         data.append([''] * len(header))
-        splitted_line = filter(lambda x: x != '|', line.split())
+        splitted_line = list(filter(lambda x: x != '|', line.split()))
         for i in range(len(splitted_line)):
             data[-1][i] = splitted_line[i]
     return header, data
