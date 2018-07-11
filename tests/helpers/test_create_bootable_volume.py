@@ -8,8 +8,8 @@ import testinfra.host
 
 
 def test_success(mocker):
-    """Verify create_bootable_volume completes without raising an error and
-    returns None when the OpenStack command returns an exit code of '0'.
+    """Verify create_bootable_volume returns None when the OpenStack command
+    returns an exit code of '0'.
 
     relies on mocked objects from testinfra
     """
@@ -33,8 +33,8 @@ def test_success(mocker):
 
 
 def test_failure(mocker):
-    """Verify create_bootable_volume raises an error when the OpenStack
-    command returns an exit code of '2'.
+    """Verify create_bootable_volume raises an AssertionError when the
+    OpenStack command returns an exit code of '2'.
 
     relies on mocked objects from testinfra
     """

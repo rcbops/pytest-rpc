@@ -82,6 +82,9 @@ def create_bootable_volume(data, run_on_host):
                            }
         run_on_host (testinfra.Host): Testinfra host object to execute the
                                       action on.
+
+    Raises:
+        AssertionError: If operation unsuccessful.
     """
 
     volume_size = data['volume']['size']
