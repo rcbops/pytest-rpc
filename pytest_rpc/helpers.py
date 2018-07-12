@@ -75,13 +75,16 @@ def create_bootable_volume(data, run_on_host):
     Args:
         data (dictionary): Dictionary in the following format:
                            { 'volume': { 'size': '',
-                                         'imageref': '',
+                                         'imageRef': '',
                                          'name': '',
                                          'zone': '',
                                        }
                            }
         run_on_host (testinfra.Host): Testinfra host object to execute the
                                       action on.
+
+    Raises:
+        AssertionError: If operation unsuccessful.
     """
 
     volume_size = data['volume']['size']
