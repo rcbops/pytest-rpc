@@ -502,13 +502,14 @@ def parse_swift_recon(recon_out):
     """
 
     lines = recon_out.splitlines()
-    delimiter_regex = re.compile('^={79}')
+    delimiter_regex = re.compile(r'^={79}')
     collection = []
 
-    delimiter_positions = [ind for ind, x in enumerate(lines) if re.match(delimiter_regex, x)]
+    delimiter_positions = [ind for ind, x in enumerate(lines)
+                           if delimiter_regex.match(x)]
 
     for ind, delimiter_position in enumerate(delimiter_positions):
-        if ind != len(delimiter_positions) - 1:  # Check to see if we are in the last position
+        if ind != len(delimiter_positions) - 1:  # Are in the last position?
             start = delimiter_position + 1
             end = delimiter_positions[ind + 1]
             collection.append(lines[start:end])
