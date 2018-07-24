@@ -1,6 +1,7 @@
 import sh
 import json
 import uuid
+import re
 from time import sleep
 
 utility_container = ("lxc-attach -n $(lxc-ls -1 | grep utility | head -n 1) "
@@ -501,24 +502,16 @@ def parse_swift_recon(recon_out):
     """
 
     lines = recon_out.splitlines()
+    delimiter_regex = re.compile('^={79}')
     collection = []
-    data = []
-    inData = False
-    i = 0
-    while i < len(lines):
-        if not inData:
-            if lines[i].startswith('=' * 79):
-                inData = True
-        elif lines[i].startswith('=' * 79):
-            inData = False
-            collection.append(data)
-            data = []
-            # Reset counter to use the delimeter to trigger data collection in
-            # the next pass.
-            i = i - 1
-        else:
-            data.append(lines[i])
-        i = i + 1
+
+    delimiter_positions = [ind for ind, x in enumerate(lines) if re.match(delimiter_regex, x)]
+
+    for ind, delimiter_position in enumerate(delimiter_positions):
+        if ind != len(delimiter_positions) - 1:  # Check to see if we are in the last position
+            start = delimiter_position + 1
+            end = delimiter_positions[ind + 1]
+            collection.append(lines[start:end])
     return collection
 
 
