@@ -4,9 +4,6 @@ import uuid
 import re
 from time import sleep
 
-utility_container = ("lxc-attach -n $(lxc-ls -1 | grep utility | head -n 1) "
-                     "-- bash -c '. /root/openrc ; ")
-
 
 def get_git_branch():
     """Retrieve current git branch name of calling repo
@@ -55,10 +52,10 @@ def get_id_by_name(service_type, service_name, run_on_host):
     Returns:
         string: Id of Openstack object instance. None if result not found.
     """
-    cmd = "{} openstack {} show \'{}\' -f json'".format(utility_container,
-                                                        service_type,
-                                                        service_name)
-    output = run_on_host.run(cmd)
+    cmd = (". ~/openrc ; "
+           "openstack {} show \'{}\' "
+           "-f json".format(service_type, service_name))
+    output = run_on_container(cmd, 'utility', run_on_host)
     try:
         result = json.loads(output.stdout)
     except ValueError:
@@ -88,18 +85,17 @@ def create_bootable_volume(data, run_on_host):
         AssertionError: If operation unsuccessful.
     """
 
-    volume_size = data['volume']['size']
-    imageRef = data['volume']['imageRef']
-    volume_name = data['volume']['name']
-    zone = data['volume']['zone']
+    cmd = (". ~/openrc ; "
+           "openstack volume create "
+           "--size {} "
+           "--image {} "
+           "--availability-zone {} "
+           "--bootable {}".format(data['volume']['size'],
+                                  data['volume']['imageref'],
+                                  data['volume']['zone'],
+                                  data['volume']['name']))
 
-    cmd = "{} openstack volume create \
-           --size {} \
-           --image {} \
-           --availability-zone {} \
-           --bootable {}'".format(utility_container, volume_size, imageRef,
-                                  zone, volume_name)
-    run_on_host.run_expect([0], cmd)
+    assert run_on_container(cmd, 'utility', run_on_host).rc == 0
 
 
 def openstack_name_list(name, run_on_host):
@@ -113,8 +109,10 @@ def openstack_name_list(name, run_on_host):
     Returns:
         string: List of OpenStack object instances in table format.
     """
-    cmd = "{} openstack {} list'".format(utility_container, name)
-    output = run_on_host.run(cmd)
+
+    cmd = (". ~/openrc ; "
+           "openstack {} list".format(name))
+    output = run_on_container(cmd, 'utility', run_on_host)
     return output.stdout
 
 
@@ -197,12 +195,13 @@ def get_expected_value(service_type, service_name, key, expected_value,
     Returns:
         boolean: Whether the expected value was found or not.
     """
+
     for i in range(0, retries):
         sleep(6)
-        cmd = "{} openstack {} show \'{}\' -f json'".format(utility_container,
-                                                            service_type,
-                                                            service_name)
-        output = run_on_host.run(cmd)
+        cmd = (". ~/openrc ; "
+               "openstack {} show \'{}\' "
+               "-f json".format(service_type, service_name))
+        output = run_on_container(cmd, 'utility', run_on_host)
         try:
             result = json.loads(output.stdout)
         except ValueError as e:
@@ -269,10 +268,14 @@ def create_instance(data, run_on_host):
     source_id = get_id_by_name(data['from_source'], data['source_name'], run_on_host)
     network_id = get_id_by_name('network', data['network_name'], run_on_host)
 
-    cmd = "{} openstack server create --{} {} --flavor {} --nic net-id={} {}'"\
-        .format(utility_container, data['from_source'], source_id, data['flavor'], network_id, data['instance_name'])
+    cmd = (". ~/openrc ; "
+           "openstack server create --{} {} "
+           "--flavor {} --nic net-id={} {}".format(data['from_source'],
+                                                   source_id, data['flavor'],
+                                                   network_id,
+                                                   data['instance_name']))
 
-    run_on_host.run_expect([0], cmd)
+    assert run_on_container(cmd, 'utility', run_on_host).rc == 0
 
 
 def _asset_in_list(service_type, service_name, expected_asset, run_on_host, retries=10):
@@ -351,11 +354,16 @@ def stop_server_instance(instance_name, run_on_host):
     Args:
         instance_name (str): The name of the OpenStack instance to be stopped.
         run_on_host (testinfra.Host): Testinfra host object to execute the action on.
+
+    Raises:
+        AssertionError: If operation is unsuccessful.
     """
     instance_id = get_id_by_name('server', instance_name, run_on_host)
 
-    cmd = "{} openstack server stop {}'".format(utility_container, instance_id)
-    run_on_host.run_expect([0], cmd)
+    cmd = (". ~/openrc ; "
+           "openstack server stop {}".format(instance_id))
+
+    assert run_on_container(cmd, 'utility', run_on_host).rc == 0
 
 
 def create_snapshot_from_instance(snapshot_name, instance_name, run_on_host):
@@ -367,9 +375,11 @@ def create_snapshot_from_instance(snapshot_name, instance_name, run_on_host):
         run_on_host (testinfra.Host): Testinfra host object to execute the action on.
     """
     instance_id = get_id_by_name('server', instance_name, run_on_host)
-    cmd = "{} openstack server image create --name {} {}'".format(utility_container, snapshot_name, instance_id)
+    cmd = (". ~/openrc ; "
+           "openstack server image create "
+           "--name {} {}".format(snapshot_name, instance_id))
 
-    run_on_host.run_expect([0], cmd)
+    assert run_on_container(cmd, 'utility', run_on_host).rc == 0
 
 
 def delete_it(service_type, service_name, run_on_host):
@@ -381,13 +391,15 @@ def delete_it(service_type, service_name, run_on_host):
         run_on_host (testinfra.Host): Testinfra host object to execute the action on.
 
     Raises:
-        AssertionError: If operation is unsuccessful. """
+        AssertionError: If operation is unsuccessful.
+    """
 
     service_id = get_id_by_name(service_type, service_name, run_on_host)
-    cmd = "{} openstack {} delete {}'".format(utility_container, service_type, service_id)
-    run_on_host.run_expect([0], cmd)
+    cmd = (". ~/openrc ; "
+           "openstack {} delete {}".format(service_type, service_id))
 
-    assert (asset_not_in_the_list(service_type, service_name, run_on_host))
+    assert run_on_container(cmd, 'utility', run_on_host).rc == 0
+    assert (resource_not_in_the_list(service_type, service_name, run_on_host))
 
 
 def create_floating_ip(network_name, run_on_host):
@@ -408,8 +420,9 @@ def create_floating_ip(network_name, run_on_host):
     network_id = get_id_by_name('network', network_name, run_on_host)
     assert network_id is not None
 
-    cmd = "{} openstack floating ip create {} -f json'".format(utility_container, network_id)
-    output = run_on_host.run(cmd)
+    cmd = (". ~/openrc ; "
+           "openstack floating ip create {} -f json".format(network_id))
+    output = run_on_container(cmd, 'utility', run_on_host)
 
     assert (output.rc == 0)
 
@@ -433,10 +446,8 @@ def ping_ip_from_utility_container(ip, run_on_host):
         boolean: Whether the IP address can be pinged or not
     """
 
-    cmd = "{} ping -c1 {}'".format(utility_container, ip)
-    output = run_on_host.run(cmd)
-
-    if output.rc == 0:
+    cmd = "ping -c1 {}".format(ip)
+    if (run_on_container(cmd, 'utility', run_on_host).rc == 0):
         return True
     else:
         return False
