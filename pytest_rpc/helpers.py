@@ -73,7 +73,7 @@ def create_bootable_volume(data, run_on_host):
     Args:
         data (dictionary): Dictionary in the following format:
                            { 'volume': { 'size': '',
-                                         'imageRef': '',
+                                         'imageref': '',
                                          'name': '',
                                          'zone': '',
                                        }
