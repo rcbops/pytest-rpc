@@ -33,10 +33,10 @@ def get_osa_version():
         return (r'Pike', r'16')
     elif cur_branch in ['queens', 'queens-rc']:
         return (r'Queens', r'17')
-    elif cur_branch == 'master-rc':
-        return (r'Queens', r'17')
+    elif cur_branch in ['rocky', 'rocky-rc']:
+        return (r'Rocky', r'18')
     else:
-        return (r'\w+', r'\d+')
+        return (r'\w+', r'\w+')
 
 
 def get_id_by_name(service_type, service_name, run_on_host):
