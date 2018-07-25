@@ -93,4 +93,5 @@ def test_floating_ip_returns_invalid_json(mocker):
     cr2.rc = 0
     cr2.stdout = ''
 
-    assert not pytest_rpc.helpers.create_floating_ip('mynetwork', myhost)
+    with pytest.raises(AssertionError):
+        pytest_rpc.helpers.create_floating_ip('mynetwork', myhost)

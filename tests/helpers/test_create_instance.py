@@ -9,8 +9,8 @@ import testinfra.host
 
 
 def test_success(mocker):
-    """Verify create_instance returns None when the OpenStack command returns
-    an exit code of '0'.
+    """Verify create_instance returns instance id when the OpenStack command
+    succeeds.
 
     relies on mocked objects from testinfra
     """
@@ -20,9 +20,8 @@ def test_success(mocker):
     cr = mocker.Mock(spec=testinfra.backend.base.CommandResult)
     mocker.patch('testinfra.host.Host.run', return_value=cr)
 
-    server = {'id': 'foo', 'name': 'myserver'}
-    cr.rc = 0
-    cr.stdout = json.dumps(server)
+    resource = {'id': 'resource_id'}
+    cr.stdout = json.dumps(resource)
 
     data = {
         "instance_name": 'instance_name',
@@ -32,24 +31,29 @@ def test_success(mocker):
         "network_name": 'network',
     }
 
-    assert not pytest_rpc.helpers.create_instance(data, myhost)
+    result = pytest_rpc.helpers.create_instance(data, myhost)
+    assert result == resource['id']
 
 
 def test_failure(mocker):
-    """Verify create_instance raises an AssertionError when the server instance
-    has failed to be successfully created.
+    """Verify create_instance returns None when the server instance has failed
+    to be successfully created.
 
     relies on mocked objects from testinfra
     """
 
     fake_backend = mocker.Mock(spec=testinfra.backend.base.BaseBackend)
     myhost = testinfra.host.Host(fake_backend)
-    cr = mocker.Mock(spec=testinfra.backend.base.CommandResult)
-    mocker.patch('testinfra.host.Host.run', return_value=cr)
+    cr1 = mocker.Mock(spec=testinfra.backend.base.CommandResult)
+    cr2 = mocker.Mock(spec=testinfra.backend.base.CommandResult)
+    mocker.patch('testinfra.host.Host.run', side_effect=[cr1, cr1, cr2])
 
-    server = {'id': 'foo', 'name': 'myserver'}
-    cr.rc = 2
-    cr.stdout = json.dumps(server)
+    resource = {'id': 'resource_id'}
+    failed = 'Invalid json'
+    cr1.rc = 0
+    cr2.rc = 2
+    cr1.stdout = json.dumps(resource)
+    cr2.stdout = json.dumps(failed)
 
     data = {
         "instance_name": 'instance_name',

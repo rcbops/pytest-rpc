@@ -18,10 +18,10 @@ def test_successful_deletion(mocker):
     cr2 = mocker.Mock(spec=testinfra.backend.base.CommandResult)
     mocker.patch('testinfra.host.Host.run', side_effect=[cr1, cr2, cr2])
 
-    server = {'id': 'foo', 'name': 'myserver'}
+    server = {'ID': 'foo', 'Name': 'myserver'}
     cr1.rc = cr2.rc = 0
     cr1.stdout = json.dumps(server)
-    cr2.stdout = ''
+    cr2.stdout = '[]'
 
     assert not pytest_rpc.helpers.delete_instance('myserver', myhost)
 
@@ -35,7 +35,7 @@ def test_failed_deletion(mocker):
     cr = mocker.Mock(spec=testinfra.backend.base.CommandResult)
     mocker.patch('testinfra.host.Host.run', return_value=cr)
 
-    server = {'id': 'foo', 'name': 'myserver'}
+    server = [{'ID': 'foo', 'Name': 'myserver'}]
     cr.rc = 0
     cr.stdout = json.dumps(server)
 
