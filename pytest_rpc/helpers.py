@@ -127,12 +127,8 @@ def delete_volume(volume_name, run_on_host):
     Raises:
         AssertionError: If operation unsuccessful.
     """
-    volume_id = get_id_by_name('volume', volume_name, run_on_host)
-    cmd = "{} openstack volume delete --purge {}'".format(utility_container,
-                                                          volume_id)
-    run_on_host.run_expect([0], cmd)
 
-    assert (asset_not_in_the_list('volume', volume_name, run_on_host))
+    delete_it('volume', volume_name, run_on_host)
 
 
 def parse_table(ascii_table):
@@ -236,12 +232,8 @@ def delete_instance(instance_name, run_on_host):
     Raises:
         AssertionError: If operation unsuccessful.
     """
-    instance_id = get_id_by_name('server', instance_name, run_on_host)
-    cmd = "{} openstack server delete {}'".format(utility_container,
-                                                  instance_id)
-    run_on_host.run_expect([0], cmd)
 
-    assert (asset_not_in_the_list('server', instance_name, run_on_host))
+    delete_it('server', instance_name, run_on_host)
 
 
 def create_instance(data, run_on_host):
