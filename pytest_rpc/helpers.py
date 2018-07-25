@@ -81,8 +81,9 @@ def create_bootable_volume(data, run_on_host):
         run_on_host (testinfra.Host): Testinfra host object to execute the
                                       action on.
 
-    Raises:
-        AssertionError: If operation unsuccessful.
+    Returns:
+        str: The id of the created resource
+        None: If failed to create the resource
     """
 
     cmd = (". ~/openrc ; "
@@ -95,7 +96,20 @@ def create_bootable_volume(data, run_on_host):
                                   data['volume']['zone'],
                                   data['volume']['name']))
 
-    assert run_on_container(cmd, 'utility', run_on_host).rc == 0
+    output = run_on_container(cmd, 'utility', run_on_host)
+
+    try:
+        result = json.loads(output.stdout)
+    except ValueError:
+        pass
+
+    try:
+        if 'id' in result:
+            return result['id']
+    except (UnboundLocalError, TypeError):
+        pass
+
+    return None
 
 
 def openstack_name_list(name, run_on_host):
@@ -250,8 +264,9 @@ def create_instance(data, run_on_host):
                     }
         run_on_host (testinfra.host.Host): A hostname where the command is being executed.
 
-    Raises:
-        AssertionError: If operation is unsuccessful.
+    Returns:
+        str: The id of the created resource
+        None: If failed to create the resource
 
     Example:
     `openstack server create --image <image_id> flavor <flavor> --nic <net-id=network_id> server/instance_name`
@@ -267,7 +282,20 @@ def create_instance(data, run_on_host):
                                                    network_id,
                                                    data['instance_name']))
 
-    assert run_on_container(cmd, 'utility', run_on_host).rc == 0
+    output = run_on_container(cmd, 'utility', run_on_host)
+
+    try:
+        result = json.loads(output.stdout)
+    except ValueError:
+        pass
+
+    try:
+        if 'id' in result:
+            return result['id']
+    except (UnboundLocalError, TypeError):
+        pass
+
+    return None
 
 
 def _asset_in_list(service_type, service_name, expected_asset, run_on_host, retries=10):
@@ -365,13 +393,31 @@ def create_snapshot_from_instance(snapshot_name, instance_name, run_on_host):
         snapshot_name (str): The name of the OpenStack snapshot to be created.
         instance_name (str): The name of the OpenStack instance from which the snapshot is created.
         run_on_host (testinfra.Host): Testinfra host object to execute the action on.
+
+    Returns:
+        str: The id of the created resource
+        None: If failed to create the resource
     """
+
     instance_id = get_id_by_name('server', instance_name, run_on_host)
     cmd = (". ~/openrc ; "
            "openstack server image create "
            "--name {} {}".format(snapshot_name, instance_id))
 
-    assert run_on_container(cmd, 'utility', run_on_host).rc == 0
+    output = run_on_container(cmd, 'utility', run_on_host)
+
+    try:
+        result = json.loads(output.stdout)
+    except ValueError:
+        pass
+
+    try:
+        if 'id' in result:
+            return result['id']
+    except (UnboundLocalError, TypeError):
+        pass
+
+    return None
 
 
 def delete_it(service_type, service_name, run_on_host):
@@ -406,7 +452,7 @@ def create_floating_ip(network_name, run_on_host):
 
     Returns:
         str: The newly created floating ip name
-        None: If failed to create the floating IP
+        None: If failed to create the resource
     """
 
     network_id = get_id_by_name('network', network_name, run_on_host)
@@ -425,6 +471,8 @@ def create_floating_ip(network_name, run_on_host):
 
     if 'name' in result:
         return result['name']
+    else:
+        return
 
 
 def ping_ip_from_utility_container(ip, run_on_host):
