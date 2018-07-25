@@ -16,11 +16,11 @@ def get_git_branch():
     return git('rev-parse', '--abbrev-ref', 'HEAD')
 
 
-def get_osa_version_tuple():
-    """Get tuple of OpenStack version (code_name, major_version) as raw
-    strings.
+def get_osa_version():
+    """Get OpenStack version (code_name, major_version)
 
     This data is based on the git branch of the test suite being executed
+
     Returns:
         tuple: (code_name, major_version) as raw strings of OpenStack version
     """
