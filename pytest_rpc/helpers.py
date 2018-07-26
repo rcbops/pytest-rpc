@@ -485,6 +485,8 @@ def create_floating_ip(network_name, run_on_host):
     return result['name']
 
 
+# What is the specific use case for pinging from utility container?
+# Is no specific use case identified, then this helper is not needed.
 def ping_ip_from_utility_container(ip, run_on_host):
     """Verify the IP address can be pinged from utility container on a host
 
