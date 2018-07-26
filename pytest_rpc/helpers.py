@@ -300,48 +300,52 @@ def create_instance(data, run_on_host):
     return result['id']
 
 
-def _asset_in_list(service_type, service_name, expected_asset, run_on_host, retries=10):
+def _resource_in_list(service_type, service_name, expected_resource, run_on_host, retries=10):
     """Verify if a volume/server/image is existing
 
     Args:
         service_type (str): The OpenStack object type to query for.
         service_name (str): The name of the OpenStack object to query for.
-        expected_asset (bool): Whether or not the asset is expected in the list
+        expected_resource (bool): Whether or not the resource is expected in the list
         run_on_host (testinfra.Host): Testinfra host object to execute the action on.
         retries (int): The maximum number of retry attempts.
 
     Returns:
-        bool: Whether the expected asset was found or not.
+        bool: Whether the expected resource was found or not.
     """
+
+    SLEEP = 2
 
     for i in range(0, retries):
 
         output = openstack_name_list(service_type, run_on_host)
 
-        # Expecting that asset is in the list, for example after creating an asset, it is not shown in the list until
-        # several seconds later, retry every 2 seconds until reaching max retries (default = 10) to ensure the expected
-        # asset seen in the list.
+        # Expecting that a resource IS in the list, for example after creating
+        # a resource, it is not shown in the list until several seconds later,
+        # retry every SLEEP seconds until reaching max retries (default = 10)
+        # to ensure the expected resource seen in the list.
         # TODO: Create unit tests for this scenario
         if expected_asset:
             if service_name in output:
                 return True
             else:
-                sleep(2)
+                sleep(SLEEP)
 
-        # Expecting that asset is NOT in the list, for example after deleting an asset, it is STILL shown in the list
-        # until several seconds later, retry every 2 seconds until reaching max retries (default = 10) to ensure the
-        # asset is removed from the list
+        # Expecting that a resource is NOT in the list, for example after
+        # deleting a resource, it is STILL shown in the list until several
+        # seconds later, retry every SLEEP seconds until reaching max retries
+        # (default = 10) to ensure the resource is removed from the list
         # TODO: Create unit tests for this scenario
         else:
             if service_name not in output:
                 return True
             else:
-                sleep(2)
+                sleep(SLEEP)
     return False
 
 
-def asset_is_in_the_list(service_type, service_name, run_on_host):
-    """ Verify if the asset is IN the list
+def resource_is_in_the_list(service_type, service_name, run_on_host):
+    """ Verify if the resource is IN the list
 
     Args:
         service_type (str): The OpenStack object type to query for.
@@ -349,25 +353,26 @@ def asset_is_in_the_list(service_type, service_name, run_on_host):
         run_on_host (testinfra.Host): Testinfra host object to execute the action on.
 
     Returns:
-        bool: True if the asset is IN the list, False if the asset is not in the list
+        bool: True if the resource is IN the list, False if the resource is not in the list
 
     """
-    return _asset_in_list(service_type, service_name, True, run_on_host)
+
+    return _resource_in_list(service_type, service_name, True, run_on_host)
 
 
-def asset_not_in_the_list(service_type, service_name, run_on_host):
-    """ Verify if the asset in NOT in the list
+def resource_not_in_the_list(service_type, service_name, run_on_host):
+    """ Verify if the resource in NOT in the list
 
-        Args:
-            service_type (str): The OpenStack object type to query for.
-            service_name (str): The name of the OpenStack object to query for.
-            run_on_host (testinfra.Host): Testinfra host object to execute the action on.
+    Args:
+        service_type (str): The OpenStack object type to query for.
+        service_name (str): The name of the OpenStack object to query for.
+        run_on_host (testinfra.Host): Testinfra host object to execute the action on.
 
-        Returns:
-            bool: True if the asset is NOT in the list, False if the asset is in the list
+    Returns:
+        bool: True if the resource is NOT in the list, False if the resource is in the list
+    """
 
-        """
-    return _asset_in_list(service_type, service_name, False, run_on_host)
+    return _resource_in_list(service_type, service_name, False, run_on_host)
 
 
 def stop_server_instance(instance_name, run_on_host):
