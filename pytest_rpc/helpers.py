@@ -112,7 +112,7 @@ def create_bootable_volume(data, run_on_host):
     return result['id']
 
 
-def openstack_name_list(name, run_on_host):
+def get_resource_list_by_name(name, run_on_host):
     """Get a list of OpenStack object instances of given type.
 
     Args:
@@ -121,13 +121,17 @@ def openstack_name_list(name, run_on_host):
                                       action on.
 
     Returns:
-        string: List of OpenStack object instances in table format.
+        json: List of OpenStack object instances
     """
 
     cmd = (". ~/openrc ; "
            "openstack {} list".format(name))
     output = run_on_container(cmd, 'utility', run_on_host)
-    return output.stdout
+    try:
+        result = json.loads(output.stdout)
+    except ValueError:
+        result = []
+    return result
 
 
 def delete_volume(volume_name, run_on_host):
@@ -318,15 +322,15 @@ def _resource_in_list(service_type, service_name, expected_resource, run_on_host
 
     for i in range(0, retries):
 
-        output = openstack_name_list(service_type, run_on_host)
+        output = get_resource_list_by_name(service_type, run_on_host)
 
         # Expecting that a resource IS in the list, for example after creating
         # a resource, it is not shown in the list until several seconds later,
         # retry every SLEEP seconds until reaching max retries (default = 10)
         # to ensure the expected resource seen in the list.
         # TODO: Create unit tests for this scenario
-        if expected_asset:
-            if service_name in output:
+        if expected_resource:
+            if [x for x in output if x['Name'] == service_name]:
                 return True
             else:
                 sleep(SLEEP)
@@ -337,7 +341,7 @@ def _resource_in_list(service_type, service_name, expected_resource, run_on_host
         # (default = 10) to ensure the resource is removed from the list
         # TODO: Create unit tests for this scenario
         else:
-            if service_name not in output:
+            if not [x for x in output if x['Name'] == service_name]:
                 return True
             else:
                 sleep(SLEEP)
