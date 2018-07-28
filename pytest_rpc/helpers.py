@@ -134,7 +134,7 @@ def get_resource_list_by_name(name, run_on_host):
     return result
 
 
-def delete_volume(volume_name, run_on_host):
+def delete_volume(volume_name, run_on_host, addl_flags=''):
     """Delete OpenStack volume
 
     Args:
@@ -146,7 +146,7 @@ def delete_volume(volume_name, run_on_host):
         AssertionError: If operation unsuccessful.
     """
 
-    delete_it('volume', volume_name, run_on_host)
+    delete_it('volume', volume_name, run_on_host, addl_flags=addl_flags)
 
 
 def parse_table(ascii_table):
@@ -431,13 +431,14 @@ def create_snapshot_from_instance(snapshot_name, instance_name, run_on_host):
     return result['id']
 
 
-def delete_it(service_type, service_name, run_on_host):
+def delete_it(service_type, service_name, run_on_host, addl_flags=''):
     """Delete an OpenStack object
 
     Args:
         service_type (str): The OpenStack object type to query for.
         service_name (str): The name of the OpenStack object to query for.
         run_on_host (testinfra.Host): Testinfra host object to execute the action on.
+        addl_flags (str): Additional flags to pass to the openstack command
 
     Raises:
         AssertionError: If operation is unsuccessful.
@@ -445,7 +446,9 @@ def delete_it(service_type, service_name, run_on_host):
 
     service_id = get_id_by_name(service_type, service_name, run_on_host)
     cmd = (". ~/openrc ; "
-           "openstack {} delete {}".format(service_type, service_id))
+           "openstack {} delete "
+           "{} "
+           "{}".format(service_type, addl_flags, service_id))
 
     assert run_on_container(cmd, 'utility', run_on_host).rc == 0
     assert (resource_not_in_the_list(service_type, service_name, run_on_host))
