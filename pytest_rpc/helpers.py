@@ -22,7 +22,7 @@ def get_osa_version():
     This data is based on the git branch of the test suite being executed
 
     Returns:
-        tuple: (code_name, major_version) as raw strings of OpenStack version
+        tuple of (str, str): (code_name, major_version) OpenStack version
     """
 
     cur_branch = get_git_branch()
@@ -50,7 +50,7 @@ def get_id_by_name(service_type, service_name, run_on_host):
                                       action on.
 
     Returns:
-        string: Id of Openstack object instance. None if result not found.
+        str: Id of Openstack object instance. None if result not found.
     """
     cmd = (". ~/openrc ; "
            "openstack {} show \'{}\' "
@@ -71,13 +71,13 @@ def create_bootable_volume(data, run_on_host):
     """Create a bootable volume using a json file
 
     Args:
-        data (dictionary): Dictionary in the following format:
-                           { 'volume': { 'size': '',
-                                         'imageref': '',
-                                         'name': '',
-                                         'zone': '',
-                                       }
-                           }
+        data (dict): Dictionary in the following format:
+                     { 'volume': { 'size': '',
+                                   'imageref': '',
+                                   'name': '',
+                                   'zone': '',
+                                 }
+                     }
         run_on_host (testinfra.Host): Testinfra host object to execute the
                                       action on.
 
@@ -121,7 +121,7 @@ def get_resource_list_by_name(name, run_on_host):
                                       action on.
 
     Returns:
-        json: List of OpenStack object instances
+        list of dict: OpenStack object instances parsed from JSON
     """
 
     cmd = (". ~/openrc ; "
@@ -156,8 +156,8 @@ def parse_table(ascii_table):
         ascii_table (str): OpenStack ascii table.
 
     Returns:
-        list: List of column headers from table.
-        list: List of column rows from table.
+        list of str: Column headers from table.
+        list of str: Rows from table.
     """
     header = []
     data = []
@@ -184,7 +184,7 @@ def generate_random_string(string_length=10):
         string_length (int): Size of string to generate.
 
     Returns:
-        string: Random string of specified length (maximum of 32 characters)
+        str: Random string of specified length (maximum of 32 characters)
     """
     random_str = str(uuid.uuid4())
     random_str = random_str.upper()
@@ -207,7 +207,7 @@ def get_expected_value(service_type, service_name, key, expected_value,
         retries (int): The maximum number of retry attempts.
 
     Returns:
-        boolean: Whether the expected value was found or not.
+        bool: Whether the expected value was found or not.
     """
 
     for i in range(0, retries):
@@ -258,7 +258,7 @@ def create_instance(data, run_on_host):
     """Create an instance from source (a glance image or a snapshot)
 
     Args:
-        data (dict): a dictionary of data. A sample of data as below:
+        data (dict): Dictionary in the following format:
                     data = {
                         "instance_name": 'instance_name',
                         "from_source": 'image',
@@ -493,7 +493,7 @@ def ping_ip_from_utility_container(ip, run_on_host):
         run_on_host (testinfra.Host): Testinfra host object to execute the action on.
 
     Returns:
-        boolean: Whether the IP address can be pinged or not
+        bool: Whether the IP address can be pinged or not
     """
 
     cmd = "ping -c1 {}".format(ip)
@@ -583,7 +583,7 @@ def parse_swift_ring_builder(ring_builder_output):
         ring_builder_output (str): The output from the swift-ring-builder
                                    command.
     Returns:
-        dictionary: Swift ring data. Empty dictionary if parse fails.
+        dict of {str: float}: Swift ring data. Empty dictionary if parse fails.
 
     Example data:
         {'zones': 1.0,
