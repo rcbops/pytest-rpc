@@ -4,9 +4,6 @@ import uuid
 import re
 from time import sleep
 
-utility_container = ("lxc-attach -n $(lxc-ls -1 | grep utility | head -n 1) "
-                     "-- bash -c '. /root/openrc ; ")
-
 
 def get_git_branch():
     """Retrieve current git branch name of calling repo
@@ -19,13 +16,13 @@ def get_git_branch():
     return git('rev-parse', '--abbrev-ref', 'HEAD')
 
 
-def get_osa_version_tuple():
-    """Get tuple of OpenStack version (code_name, major_version) as raw
-    strings.
+def get_osa_version():
+    """Get OpenStack version (code_name, major_version)
 
     This data is based on the git branch of the test suite being executed
+
     Returns:
-        tuple: (code_name, major_version) as raw strings of OpenStack version
+        tuple of (str, str): (code_name, major_version) OpenStack version
     """
 
     cur_branch = get_git_branch()
@@ -36,10 +33,10 @@ def get_osa_version_tuple():
         return (r'Pike', r'16')
     elif cur_branch in ['queens', 'queens-rc']:
         return (r'Queens', r'17')
-    elif cur_branch == 'master-rc':
-        return (r'Queens', r'17')
+    elif cur_branch in ['rocky', 'rocky-rc']:
+        return (r'Rocky', r'18')
     else:
-        return (r'\w+', r'\d+')
+        return (r'\w+', r'\w+')
 
 
 def get_id_by_name(service_type, service_name, run_on_host):
@@ -53,12 +50,12 @@ def get_id_by_name(service_type, service_name, run_on_host):
                                       action on.
 
     Returns:
-        string: Id of Openstack object instance. None if result not found.
+        str: Id of Openstack object instance. None if result not found.
     """
-    cmd = "{} openstack {} show \'{}\' -f json'".format(utility_container,
-                                                        service_type,
-                                                        service_name)
-    output = run_on_host.run(cmd)
+    cmd = (". ~/openrc ; "
+           "openstack {} show \'{}\' "
+           "-f json".format(service_type, service_name))
+    output = run_on_container(cmd, 'utility', run_on_host)
     try:
         result = json.loads(output.stdout)
     except ValueError:
@@ -74,35 +71,48 @@ def create_bootable_volume(data, run_on_host):
     """Create a bootable volume using a json file
 
     Args:
-        data (dictionary): Dictionary in the following format:
-                           { 'volume': { 'size': '',
-                                         'imageRef': '',
-                                         'name': '',
-                                         'zone': '',
-                                       }
-                           }
+        data (dict): Dictionary in the following format:
+                     { 'volume': { 'size': '',
+                                   'imageref': '',
+                                   'name': '',
+                                   'zone': '',
+                                 }
+                     }
         run_on_host (testinfra.Host): Testinfra host object to execute the
                                       action on.
 
+    Returns:
+        str: The id of the created resource
+
     Raises:
-        AssertionError: If operation unsuccessful.
+        AssertionError: If failed to create the resource
     """
 
-    volume_size = data['volume']['size']
-    imageRef = data['volume']['imageRef']
-    volume_name = data['volume']['name']
-    zone = data['volume']['zone']
+    cmd = (". ~/openrc ; "
+           "openstack volume create "
+           "-f json "
+           "--size {} "
+           "--image {} "
+           "--availability-zone {} "
+           "--bootable {}".format(data['volume']['size'],
+                                  data['volume']['imageref'],
+                                  data['volume']['zone'],
+                                  data['volume']['name']))
 
-    cmd = "{} openstack volume create \
-           --size {} \
-           --image {} \
-           --availability-zone {} \
-           --bootable {}'".format(utility_container, volume_size, imageRef,
-                                  zone, volume_name)
-    run_on_host.run_expect([0], cmd)
+    output = run_on_container(cmd, 'utility', run_on_host)
+
+    try:
+        result = json.loads(output.stdout)
+    except ValueError:
+        result = output.stdout
+
+    assert type(result) is dict
+    assert 'id' in result
+
+    return result['id']
 
 
-def openstack_name_list(name, run_on_host):
+def get_resource_list_by_name(name, run_on_host):
     """Get a list of OpenStack object instances of given type.
 
     Args:
@@ -111,14 +121,20 @@ def openstack_name_list(name, run_on_host):
                                       action on.
 
     Returns:
-        string: List of OpenStack object instances in table format.
+        list of dict: OpenStack object instances parsed from JSON
     """
-    cmd = "{} openstack {} list'".format(utility_container, name)
-    output = run_on_host.run(cmd)
-    return output.stdout
+
+    cmd = (". ~/openrc ; "
+           "openstack {} list".format(name))
+    output = run_on_container(cmd, 'utility', run_on_host)
+    try:
+        result = json.loads(output.stdout)
+    except ValueError:
+        result = []
+    return result
 
 
-def delete_volume(volume_name, run_on_host):
+def delete_volume(volume_name, run_on_host, addl_flags=''):
     """Delete OpenStack volume
 
     Args:
@@ -129,12 +145,8 @@ def delete_volume(volume_name, run_on_host):
     Raises:
         AssertionError: If operation unsuccessful.
     """
-    volume_id = get_id_by_name('volume', volume_name, run_on_host)
-    cmd = "{} openstack volume delete --purge {}'".format(utility_container,
-                                                          volume_id)
-    run_on_host.run_expect([0], cmd)
 
-    assert (asset_not_in_the_list('volume', volume_name, run_on_host))
+    delete_it('volume', volume_name, run_on_host, addl_flags=addl_flags)
 
 
 def parse_table(ascii_table):
@@ -144,8 +156,8 @@ def parse_table(ascii_table):
         ascii_table (str): OpenStack ascii table.
 
     Returns:
-        list: List of column headers from table.
-        list: List of column rows from table.
+        list of str: Column headers from table.
+        list of str: Rows from table.
     """
     header = []
     data = []
@@ -172,7 +184,7 @@ def generate_random_string(string_length=10):
         string_length (int): Size of string to generate.
 
     Returns:
-        string: Random string of specified length (maximum of 32 characters)
+        str: Random string of specified length (maximum of 32 characters)
     """
     random_str = str(uuid.uuid4())
     random_str = random_str.upper()
@@ -195,14 +207,15 @@ def get_expected_value(service_type, service_name, key, expected_value,
         retries (int): The maximum number of retry attempts.
 
     Returns:
-        boolean: Whether the expected value was found or not.
+        bool: Whether the expected value was found or not.
     """
+
     for i in range(0, retries):
         sleep(6)
-        cmd = "{} openstack {} show \'{}\' -f json'".format(utility_container,
-                                                            service_type,
-                                                            service_name)
-        output = run_on_host.run(cmd)
+        cmd = (". ~/openrc ; "
+               "openstack {} show \'{}\' "
+               "-f json".format(service_type, service_name))
+        output = run_on_container(cmd, 'utility', run_on_host)
         try:
             result = json.loads(output.stdout)
         except ValueError as e:
@@ -237,19 +250,15 @@ def delete_instance(instance_name, run_on_host):
     Raises:
         AssertionError: If operation unsuccessful.
     """
-    instance_id = get_id_by_name('server', instance_name, run_on_host)
-    cmd = "{} openstack server delete {}'".format(utility_container,
-                                                  instance_id)
-    run_on_host.run_expect([0], cmd)
 
-    assert (asset_not_in_the_list('server', instance_name, run_on_host))
+    delete_it('server', instance_name, run_on_host)
 
 
 def create_instance(data, run_on_host):
     """Create an instance from source (a glance image or a snapshot)
 
     Args:
-        data (dict): a dictionary of data. A sample of data as below:
+        data (dict): Dictionary in the following format:
                     data = {
                         "instance_name": 'instance_name',
                         "from_source": 'image',
@@ -259,8 +268,11 @@ def create_instance(data, run_on_host):
                     }
         run_on_host (testinfra.host.Host): A hostname where the command is being executed.
 
+    Returns:
+        str: The id of the created resource
+
     Raises:
-        AssertionError: If operation is unsuccessful.
+        AssertionError: If failed to create the resource
 
     Example:
     `openstack server create --image <image_id> flavor <flavor> --nic <net-id=network_id> server/instance_name`
@@ -269,54 +281,75 @@ def create_instance(data, run_on_host):
     source_id = get_id_by_name(data['from_source'], data['source_name'], run_on_host)
     network_id = get_id_by_name('network', data['network_name'], run_on_host)
 
-    cmd = "{} openstack server create --{} {} --flavor {} --nic net-id={} {}'"\
-        .format(utility_container, data['from_source'], source_id, data['flavor'], network_id, data['instance_name'])
+    cmd = (". ~/openrc ; "
+           "openstack server create "
+           "-f json "
+           "--{} {} "
+           "--flavor {} "
+           "--nic net-id={} {}".format(data['from_source'],
+                                       source_id, data['flavor'],
+                                       network_id,
+                                       data['instance_name']))
 
-    run_on_host.run_expect([0], cmd)
+    output = run_on_container(cmd, 'utility', run_on_host)
+
+    try:
+        result = json.loads(output.stdout)
+    except ValueError:
+        result = output.stdout
+
+    assert type(result) is dict
+    assert 'id' in result
+
+    return result['id']
 
 
-def _asset_in_list(service_type, service_name, expected_asset, run_on_host, retries=10):
+def _resource_in_list(service_type, service_name, expected_resource, run_on_host, retries=10):
     """Verify if a volume/server/image is existing
 
     Args:
         service_type (str): The OpenStack object type to query for.
         service_name (str): The name of the OpenStack object to query for.
-        expected_asset (bool): Whether or not the asset is expected in the list
+        expected_resource (bool): Whether or not the resource is expected in the list
         run_on_host (testinfra.Host): Testinfra host object to execute the action on.
         retries (int): The maximum number of retry attempts.
 
     Returns:
-        bool: Whether the expected asset was found or not.
+        bool: Whether the expected resource was found or not.
     """
+
+    SLEEP = 2
 
     for i in range(0, retries):
 
-        output = openstack_name_list(service_type, run_on_host)
+        output = get_resource_list_by_name(service_type, run_on_host)
 
-        # Expecting that asset is in the list, for example after creating an asset, it is not shown in the list until
-        # several seconds later, retry every 2 seconds until reaching max retries (default = 10) to ensure the expected
-        # asset seen in the list.
+        # Expecting that a resource IS in the list, for example after creating
+        # a resource, it is not shown in the list until several seconds later,
+        # retry every SLEEP seconds until reaching max retries (default = 10)
+        # to ensure the expected resource seen in the list.
         # TODO: Create unit tests for this scenario
-        if expected_asset:
-            if service_name in output:
+        if expected_resource:
+            if [x for x in output if x['Name'] == service_name]:
                 return True
             else:
-                sleep(2)
+                sleep(SLEEP)
 
-        # Expecting that asset is NOT in the list, for example after deleting an asset, it is STILL shown in the list
-        # until several seconds later, retry every 2 seconds until reaching max retries (default = 10) to ensure the
-        # asset is removed from the list
+        # Expecting that a resource is NOT in the list, for example after
+        # deleting a resource, it is STILL shown in the list until several
+        # seconds later, retry every SLEEP seconds until reaching max retries
+        # (default = 10) to ensure the resource is removed from the list
         # TODO: Create unit tests for this scenario
         else:
-            if service_name not in output:
+            if not [x for x in output if x['Name'] == service_name]:
                 return True
             else:
-                sleep(2)
+                sleep(SLEEP)
     return False
 
 
-def asset_is_in_the_list(service_type, service_name, run_on_host):
-    """ Verify if the asset is IN the list
+def resource_is_in_the_list(service_type, service_name, run_on_host):
+    """ Verify if the resource is IN the list
 
     Args:
         service_type (str): The OpenStack object type to query for.
@@ -324,25 +357,26 @@ def asset_is_in_the_list(service_type, service_name, run_on_host):
         run_on_host (testinfra.Host): Testinfra host object to execute the action on.
 
     Returns:
-        bool: True if the asset is IN the list, False if the asset is not in the list
+        bool: True if the resource is IN the list, False if the resource is not in the list
 
     """
-    return _asset_in_list(service_type, service_name, True, run_on_host)
+
+    return _resource_in_list(service_type, service_name, True, run_on_host)
 
 
-def asset_not_in_the_list(service_type, service_name, run_on_host):
-    """ Verify if the asset in NOT in the list
+def resource_not_in_the_list(service_type, service_name, run_on_host):
+    """ Verify if the resource in NOT in the list
 
-        Args:
-            service_type (str): The OpenStack object type to query for.
-            service_name (str): The name of the OpenStack object to query for.
-            run_on_host (testinfra.Host): Testinfra host object to execute the action on.
+    Args:
+        service_type (str): The OpenStack object type to query for.
+        service_name (str): The name of the OpenStack object to query for.
+        run_on_host (testinfra.Host): Testinfra host object to execute the action on.
 
-        Returns:
-            bool: True if the asset is NOT in the list, False if the asset is in the list
+    Returns:
+        bool: True if the resource is NOT in the list, False if the resource is in the list
+    """
 
-        """
-    return _asset_in_list(service_type, service_name, False, run_on_host)
+    return _resource_in_list(service_type, service_name, False, run_on_host)
 
 
 def stop_server_instance(instance_name, run_on_host):
@@ -351,11 +385,16 @@ def stop_server_instance(instance_name, run_on_host):
     Args:
         instance_name (str): The name of the OpenStack instance to be stopped.
         run_on_host (testinfra.Host): Testinfra host object to execute the action on.
+
+    Raises:
+        AssertionError: If operation is unsuccessful.
     """
     instance_id = get_id_by_name('server', instance_name, run_on_host)
 
-    cmd = "{} openstack server stop {}'".format(utility_container, instance_id)
-    run_on_host.run_expect([0], cmd)
+    cmd = (". ~/openrc ; "
+           "openstack server stop {}".format(instance_id))
+
+    assert run_on_container(cmd, 'utility', run_on_host).rc == 0
 
 
 def create_snapshot_from_instance(snapshot_name, instance_name, run_on_host):
@@ -365,29 +404,54 @@ def create_snapshot_from_instance(snapshot_name, instance_name, run_on_host):
         snapshot_name (str): The name of the OpenStack snapshot to be created.
         instance_name (str): The name of the OpenStack instance from which the snapshot is created.
         run_on_host (testinfra.Host): Testinfra host object to execute the action on.
+
+    Returns:
+        str: The id of the created resource
+
+    Raises:
+        AssertionError: If failed to create the resource
     """
+
     instance_id = get_id_by_name('server', instance_name, run_on_host)
-    cmd = "{} openstack server image create --name {} {}'".format(utility_container, snapshot_name, instance_id)
+    cmd = (". ~/openrc ; "
+           "openstack server image create "
+           "-f json "
+           "--name {} {}".format(snapshot_name, instance_id))
 
-    run_on_host.run_expect([0], cmd)
+    output = run_on_container(cmd, 'utility', run_on_host)
+
+    try:
+        result = json.loads(output.stdout)
+    except ValueError:
+        result = output.stdout
+
+    assert type(result) is dict
+    assert 'id' in result
+
+    return result['id']
 
 
-def delete_it(service_type, service_name, run_on_host):
+def delete_it(service_type, service_name, run_on_host, addl_flags=''):
     """Delete an OpenStack object
 
     Args:
         service_type (str): The OpenStack object type to query for.
         service_name (str): The name of the OpenStack object to query for.
         run_on_host (testinfra.Host): Testinfra host object to execute the action on.
+        addl_flags (str): Additional flags to pass to the openstack command
 
     Raises:
-        AssertionError: If operation is unsuccessful. """
+        AssertionError: If operation is unsuccessful.
+    """
 
     service_id = get_id_by_name(service_type, service_name, run_on_host)
-    cmd = "{} openstack {} delete {}'".format(utility_container, service_type, service_id)
-    run_on_host.run_expect([0], cmd)
+    cmd = (". ~/openrc ; "
+           "openstack {} delete "
+           "{} "
+           "{}".format(service_type, addl_flags, service_id))
 
-    assert (asset_not_in_the_list(service_type, service_name, run_on_host))
+    assert run_on_container(cmd, 'utility', run_on_host).rc == 0
+    assert (resource_not_in_the_list(service_type, service_name, run_on_host))
 
 
 def create_floating_ip(network_name, run_on_host):
@@ -397,31 +461,35 @@ def create_floating_ip(network_name, run_on_host):
         network_name (str): The name of the OpenStack network object on which the floating IP is created.
         run_on_host (testinfra.Host): Testinfra host object to execute the action on.
 
-    Raises:
-        AssertionError: If operation is unsuccessful.
-
     Returns:
         str: The newly created floating ip name
-        None: If failed to create the floating IP
+
+    Raises:
+        AssertionError: If operation is unsuccessful.
     """
 
     network_id = get_id_by_name('network', network_name, run_on_host)
     assert network_id is not None
 
-    cmd = "{} openstack floating ip create {} -f json'".format(utility_container, network_id)
-    output = run_on_host.run(cmd)
+    cmd = (". ~/openrc ; "
+           "openstack floating ip create -f json {}".format(network_id))
+    output = run_on_container(cmd, 'utility', run_on_host)
 
     assert (output.rc == 0)
 
     try:
         result = json.loads(output.stdout)
     except ValueError:
-        return
+        result = output.stdout
 
-    if 'name' in result:
-        return result['name']
+    assert type(result) is dict
+    assert 'name' in result
+
+    return result['name']
 
 
+# What is the specific use case for pinging from utility container?
+# Is no specific use case identified, then this helper is not needed.
 def ping_ip_from_utility_container(ip, run_on_host):
     """Verify the IP address can be pinged from utility container on a host
 
@@ -430,13 +498,11 @@ def ping_ip_from_utility_container(ip, run_on_host):
         run_on_host (testinfra.Host): Testinfra host object to execute the action on.
 
     Returns:
-        boolean: Whether the IP address can be pinged or not
+        bool: Whether the IP address can be pinged or not
     """
 
-    cmd = "{} ping -c1 {}'".format(utility_container, ip)
-    output = run_on_host.run(cmd)
-
-    if output.rc == 0:
+    cmd = "ping -c1 {}".format(ip)
+    if (run_on_container(cmd, 'utility', run_on_host).rc == 0):
         return True
     else:
         return False
@@ -522,7 +588,7 @@ def parse_swift_ring_builder(ring_builder_output):
         ring_builder_output (str): The output from the swift-ring-builder
                                    command.
     Returns:
-        dictionary: Swift ring data. Empty dictionary if parse fails.
+        dict of {str: float}: Swift ring data. Empty dictionary if parse fails.
 
     Example data:
         {'zones': 1.0,
