@@ -4,43 +4,46 @@ import pytest_rpc.helpers
 """Test cases for the 'get_osa_version' helper function."""
 
 
-def test_newton_version(monkeypatch):
+def test_newton_version():
     """Verify osa versions for newton branch"""
-    monkeypatch.setattr(pytest_rpc.helpers, 'get_git_branch', lambda: 'newton')
-    assert pytest_rpc.helpers.get_osa_version() == (r'Newton', r'14')
+    assert pytest_rpc.helpers.get_osa_version('newton') == ('Newton', '14')
 
 
-def test_newton_rc_version(monkeypatch):
+def test_newton_rc_version():
     """Verify osa versions for newton-rc branch"""
-    monkeypatch.setattr(pytest_rpc.helpers, 'get_git_branch', lambda: 'newton-rc')
-    assert pytest_rpc.helpers.get_osa_version() == (r'Newton', r'14')
+    assert pytest_rpc.helpers.get_osa_version('newton-rc') == ('Newton', '14')
 
 
-def test_pike_version(monkeypatch):
+def test_pike_version():
     """Verify osa versions for pike branch"""
-    monkeypatch.setattr(pytest_rpc.helpers, 'get_git_branch', lambda: 'pike')
-    assert pytest_rpc.helpers.get_osa_version() == (r'Pike', r'16')
+    assert pytest_rpc.helpers.get_osa_version('pike') == ('Pike', '16')
 
 
-def test_pike_rc_version(monkeypatch):
+def test_pike_rc_version():
     """Verify osa versions for pike-rc branch"""
-    monkeypatch.setattr(pytest_rpc.helpers, 'get_git_branch', lambda: 'pike-rc')
-    assert pytest_rpc.helpers.get_osa_version() == (r'Pike', r'16')
+    assert pytest_rpc.helpers.get_osa_version('pike-rc') == ('Pike', '16')
 
 
-def test_queens_version(monkeypatch):
+def test_queens_version():
     """Verify osa versions for queens branch"""
-    monkeypatch.setattr(pytest_rpc.helpers, 'get_git_branch', lambda: 'queens')
-    assert pytest_rpc.helpers.get_osa_version() == (r'Queens', r'17')
+    assert pytest_rpc.helpers.get_osa_version('queens') == ('Queens', '17')
 
 
-def test_queens_rc_version(monkeypatch):
+def test_queens_rc_version():
     """Verify osa versions for queens-rc branch"""
-    monkeypatch.setattr(pytest_rpc.helpers, 'get_git_branch', lambda: 'queens-rc')
-    assert pytest_rpc.helpers.get_osa_version() == (r'Queens', r'17')
+    assert pytest_rpc.helpers.get_osa_version('queens-rc') == ('Queens', '17')
 
 
-def test_master_version(monkeypatch):
+def test_rocky_version():
+    """Verify osa versions for rocky branch"""
+    assert pytest_rpc.helpers.get_osa_version('rocky-rc') == ('Rocky', '18')
+
+
+def test_rocky_rc_version():
+    """Verify osa versions for rocky-rc branch"""
+    assert pytest_rpc.helpers.get_osa_version('rocky-rc') == ('Rocky', '18')
+
+
+def test_master_version():
     """Verify osa versions for master branch"""
-    monkeypatch.setattr(pytest_rpc.helpers, 'get_git_branch', lambda: 'master')
-    assert pytest_rpc.helpers.get_osa_version() == (r'\w+', r'\w+')
+    assert pytest_rpc.helpers.get_osa_version('master') == ('', '')

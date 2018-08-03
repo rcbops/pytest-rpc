@@ -1,42 +1,33 @@
-import sh
 import json
 import uuid
 import re
 from time import sleep
 
 
-def get_git_branch():
-    """Retrieve current git branch name of calling repo
-
-    Returns:
-        str: current git branch name
-    """
-
-    git = sh.git.bake(_cwd='.')
-    return git('rev-parse', '--abbrev-ref', 'HEAD')
-
-
-def get_osa_version():
+def get_osa_version(branch):
     """Get OpenStack version (code_name, major_version)
 
     This data is based on the git branch of the test suite being executed
 
+    Arge:
+        branch (str): The rpc-openstack branch to query for.
+
     Returns:
-        tuple of (str, str): (code_name, major_version) OpenStack version
+        tuple of (str, str): (code_name, major_version) OpenStack version.
+                             These strings will be empty if the branch is
+                             unknown.
     """
 
-    cur_branch = get_git_branch()
-
-    if cur_branch in ['newton', 'newton-rc']:
-        return (r'Newton', r'14')
-    elif cur_branch in ['pike', 'pike-rc']:
-        return (r'Pike', r'16')
-    elif cur_branch in ['queens', 'queens-rc']:
-        return (r'Queens', r'17')
-    elif cur_branch in ['rocky', 'rocky-rc']:
-        return (r'Rocky', r'18')
+    if branch in ['newton', 'newton-rc']:
+        return ('Newton', '14')
+    elif branch in ['pike', 'pike-rc']:
+        return ('Pike', '16')
+    elif branch in ['queens', 'queens-rc']:
+        return ('Queens', '17')
+    elif branch in ['rocky', 'rocky-rc']:
+        return ('Rocky', '18')
     else:
-        return (r'\w+', r'\w+')
+        return ('', '')
 
 
 def get_id_by_name(service_type, service_name, run_on_host):
