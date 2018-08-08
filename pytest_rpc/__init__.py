@@ -28,7 +28,8 @@ ASC_ENV_VARS = ['BUILD_URL',
                 'REPO_URL',
                 'JOB_NAME',
                 'MOLECULE_TEST_REPO',
-                'MOLECULE_SCENARIO_NAME']
+                'MOLECULE_SCENARIO_NAME',
+                'MOLECULE_GIT_COMMIT']
 MK8S_ENV_VARS = ['BUILD_URL',
                  'BUILD_NUMBER',
                  'BUILD_ID',
