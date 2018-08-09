@@ -125,7 +125,7 @@ def get_resource_list_by_name(name, run_on_host):
     """
 
     cmd = (". ~/openrc ; "
-           "openstack {} list".format(name))
+           "openstack {} list -f json".format(name))
     output = run_on_container(cmd, 'utility', run_on_host)
     try:
         result = json.loads(output.stdout)
