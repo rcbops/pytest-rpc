@@ -320,6 +320,12 @@ def _resource_in_list(service_type, service_name, expected_resource, run_on_host
 
     SLEEP = 2
 
+    key = 'Name'
+    if service_type == 'floating ip':
+        key = 'Floating IP Address'
+    else:
+        key = 'Name'
+
     for i in range(0, retries):
 
         output = get_resource_list_by_name(service_type, run_on_host)
@@ -330,7 +336,7 @@ def _resource_in_list(service_type, service_name, expected_resource, run_on_host
         # to ensure the expected resource seen in the list.
         # TODO: Create unit tests for this scenario
         if expected_resource:
-            if [x for x in output if x['Name'] == service_name]:
+            if [x for x in output if x[key] == service_name]:
                 return True
             else:
                 sleep(SLEEP)
@@ -341,7 +347,7 @@ def _resource_in_list(service_type, service_name, expected_resource, run_on_host
         # (default = 10) to ensure the resource is removed from the list
         # TODO: Create unit tests for this scenario
         else:
-            if not [x for x in output if x['Name'] == service_name]:
+            if not [x for x in output if x[key] == service_name]:
                 return True
             else:
                 sleep(SLEEP)
@@ -483,9 +489,10 @@ def create_floating_ip(network_name, run_on_host):
         result = output.stdout
 
     assert type(result) is dict
-    assert 'name' in result
+    key = 'floating_ip_address'
+    assert key in result.keys()
 
-    return result['name']
+    return result[key]
 
 
 # What is the specific use case for pinging from utility container?
