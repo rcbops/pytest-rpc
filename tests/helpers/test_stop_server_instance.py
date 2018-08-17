@@ -3,7 +3,6 @@ import pytest_rpc.helpers
 import pytest
 import testinfra.backend.base
 import testinfra.host
-import json
 
 """Test cases for the 'stop_server_instance' helper function."""
 
@@ -18,13 +17,10 @@ def test_success(mocker):
     fake_backend = mocker.Mock(spec=testinfra.backend.base.BaseBackend)
     myhost = testinfra.host.Host(fake_backend)
     cr1 = mocker.Mock(spec=testinfra.backend.base.CommandResult)
-    cr2 = mocker.Mock(spec=testinfra.backend.base.CommandResult)
-    mocker.patch('testinfra.host.Host.run', side_effect=[cr1, cr2, cr2])
+    mocker.patch('testinfra.host.Host.run', return_value=cr1)
+    mocker.patch('pytest_rpc.helpers.get_id_by_name', return_value='id_value')
 
-    server = {'id': 'foo', 'name': 'myserver'}
-    cr1.rc = cr2.rc = 0
-    cr1.stdout = json.dumps(server)
-    cr2.stdout = ''
+    cr1.rc = 0
 
     assert not pytest_rpc.helpers.stop_server_instance('myserver', myhost)
 
@@ -39,14 +35,10 @@ def test_failure(mocker):
     fake_backend = mocker.Mock(spec=testinfra.backend.base.BaseBackend)
     myhost = testinfra.host.Host(fake_backend)
     cr1 = mocker.Mock(spec=testinfra.backend.base.CommandResult)
-    cr2 = mocker.Mock(spec=testinfra.backend.base.CommandResult)
-    mocker.patch('testinfra.host.Host.run', side_effect=[cr1, cr2, cr2])
+    mocker.patch('testinfra.host.Host.run', side_effect=cr1)
+    mocker.patch('pytest_rpc.helpers.get_id_by_name', return_value='id_value')
 
-    server = {'id': 'foo', 'name': 'myserver'}
-    cr1.rc = 0
-    cr1.stdout = json.dumps(server)
-    cr2.rc = 2
-    cr2.stdout = ''
+    cr1.rc = 2
 
     with pytest.raises(AssertionError):
         pytest_rpc.helpers.stop_server_instance('myserver', myhost)
