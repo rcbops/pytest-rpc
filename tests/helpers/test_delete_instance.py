@@ -1,10 +1,21 @@
 # -*- coding: utf-8 -*-
-import pytest_rpc.helpers
-import pytest
 
 """Test cases for the 'delete_instance' helper function."""
 
+# ======================================================================================================================
+# Imports
+# ======================================================================================================================
+import os
+import pytest
+import json
+import pytest_rpc.helpers
+import testinfra.host
+import testinfra.backend.base
 
+
+# ======================================================================================================================
+# Tests
+# ======================================================================================================================
 def test_successful_deletion(mocker):
     """Verify delete_instance returns None when server instance is
     successfully deleted."""
@@ -14,6 +25,7 @@ def test_successful_deletion(mocker):
     assert not pytest_rpc.helpers.delete_instance('myserver', 'host')
 
 
+@pytest.mark.skipif('SKIP_LONG_RUNNING_TESTS' in os.environ, reason='Impatient developer is impatient')
 def test_failed_deletion(mocker):
     """Verify delete_instance raises and AssertionError when server instance
     has failed to be successfully deleted."""
