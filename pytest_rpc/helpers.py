@@ -43,17 +43,26 @@ def get_id_by_name(service_type, service_name, run_on_host):
     Returns:
         str: Id of Openstack object instance. None if result not found.
     """
-    cmd = (". ~/openrc ; "
-           "openstack {} show \'{}\' "
-           "-f json".format(service_type, service_name))
-    output = run_on_container(cmd, 'utility', run_on_host)
-    try:
-        result = json.loads(output.stdout)
-    except ValueError:
+
+    resources = get_resource_list_by_name(service_type, run_on_host)
+    if not resources:
         return
 
-    if 'id' in result:
-        return result['id']
+    try:
+        matches = [x for x in resources if x['Name'] == service_name]
+    except (KeyError, TypeError):
+        try:
+            matches = [x for x in resources if x['Display Name'] == service_name]
+        except (KeyError, TypeError):
+            return
+
+    if not matches:
+        return
+
+    result = matches[0]
+
+    if 'ID' in result.keys():
+        return result['ID']
     else:
         return
 
@@ -313,15 +322,14 @@ def _resource_in_list(service_type, service_name, expected_resource, run_on_host
 
     for i in range(0, retries):
 
-        output = get_resource_list_by_name(service_type, run_on_host)
+        res_id = get_id_by_name(service_type, service_name, run_on_host)
 
         # Expecting that a resource IS in the list, for example after creating
         # a resource, it is not shown in the list until several seconds later,
         # retry every SLEEP seconds until reaching max retries (default = 10)
         # to ensure the expected resource seen in the list.
-        # TODO: Create unit tests for this scenario
         if expected_resource:
-            if [x for x in output if x['Name'] == service_name]:
+            if res_id:
                 return True
             else:
                 sleep(SLEEP)
@@ -330,9 +338,8 @@ def _resource_in_list(service_type, service_name, expected_resource, run_on_host
         # deleting a resource, it is STILL shown in the list until several
         # seconds later, retry every SLEEP seconds until reaching max retries
         # (default = 10) to ensure the resource is removed from the list
-        # TODO: Create unit tests for this scenario
         else:
-            if not [x for x in output if x['Name'] == service_name]:
+            if not res_id:
                 return True
             else:
                 sleep(SLEEP)
@@ -474,9 +481,10 @@ def create_floating_ip(network_name, run_on_host):
         result = output.stdout
 
     assert type(result) is dict
-    assert 'name' in result
+    key = 'floating_ip_address'
+    assert key in result.keys()
 
-    return result['name']
+    return result[key]
 
 
 # What is the specific use case for pinging from utility container?

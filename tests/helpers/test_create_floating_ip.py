@@ -19,17 +19,15 @@ def test_floating_ip_created(mocker):
     fake_backend = mocker.Mock(spec=testinfra.backend.base.BaseBackend)
     myhost = testinfra.host.Host(fake_backend)
     cr1 = mocker.Mock(spec=testinfra.backend.base.CommandResult)
-    cr2 = mocker.Mock(spec=testinfra.backend.base.CommandResult)
-    mocker.patch('testinfra.host.Host.run', side_effect=[cr1, cr2, cr2])
+    mocker.patch('testinfra.host.Host.run', return_value=cr1)
+    mocker.patch('pytest_rpc.helpers.get_id_by_name', return_value='network_id')
 
-    network = {'id': 'foo', 'name': 'mynetwork'}
-    ip_address = {'name': '192.168.1.1'}
-    cr1.rc = cr2.rc = 0
+    network = {'id': 'foo', 'floating_ip_address': '10.0.248.202', 'name': 'mynetwork'}
+    cr1.rc = 0
     cr1.stdout = json.dumps(network)
-    cr2.stdout = json.dumps(ip_address)
 
     result = pytest_rpc.helpers.create_floating_ip('mynetwork', myhost)
-    assert result == ip_address['name']
+    assert result == '10.0.248.202'
 
 
 def test_network_not_found(mocker):
@@ -43,9 +41,7 @@ def test_network_not_found(mocker):
     myhost = testinfra.host.Host(fake_backend)
     cr = mocker.Mock(spec=testinfra.backend.base.CommandResult)
     mocker.patch('testinfra.host.Host.run', return_value=cr)
-
-    cr.rc = 1
-    cr.stdout = ''
+    mocker.patch('pytest_rpc.helpers.get_id_by_name', return_value=None)
 
     with pytest.raises(AssertionError):
         pytest_rpc.helpers.create_floating_ip('mynetwork', myhost)
@@ -61,14 +57,12 @@ def test_floating_ip_failure(mocker):
     fake_backend = mocker.Mock(spec=testinfra.backend.base.BaseBackend)
     myhost = testinfra.host.Host(fake_backend)
     cr1 = mocker.Mock(spec=testinfra.backend.base.CommandResult)
-    cr2 = mocker.Mock(spec=testinfra.backend.base.CommandResult)
-    mocker.patch('testinfra.host.Host.run', side_effect=[cr1, cr2, cr2])
+    mocker.patch('testinfra.host.Host.run', return_value=cr1)
+    mocker.patch('pytest_rpc.helpers.get_id_by_name', return_value='network_id')
 
-    network = {'id': 'foo', 'name': 'mynetwork'}
-    cr1.rc = 0
+    network = {'id': 'foo', 'floating_ip_address': '10.0.248.202', 'name': 'mynetwork'}
+    cr1.rc = 2
     cr1.stdout = json.dumps(network)
-    cr2.rc = 2
-    cr2.stdout = ''
 
     with pytest.raises(AssertionError):
         pytest_rpc.helpers.create_floating_ip('mynetwork', myhost)
@@ -84,14 +78,11 @@ def test_floating_ip_returns_invalid_json(mocker):
     fake_backend = mocker.Mock(spec=testinfra.backend.base.BaseBackend)
     myhost = testinfra.host.Host(fake_backend)
     cr1 = mocker.Mock(spec=testinfra.backend.base.CommandResult)
-    cr2 = mocker.Mock(spec=testinfra.backend.base.CommandResult)
-    mocker.patch('testinfra.host.Host.run', side_effect=[cr1, cr2, cr2])
+    mocker.patch('testinfra.host.Host.run', return_value=cr1)
+    mocker.patch('pytest_rpc.helpers.get_id_by_name', return_value='network_id')
 
-    network = {'id': 'foo', 'name': 'mynetwork'}
-    cr1.rc = cr2.rc = 0
-    cr1.stdout = json.dumps(network)
-    cr2.rc = 0
-    cr2.stdout = ''
+    cr1.rc = 0
+    cr1.stdout = ''
 
     with pytest.raises(AssertionError):
         pytest_rpc.helpers.create_floating_ip('mynetwork', myhost)
