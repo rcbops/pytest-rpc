@@ -1,7 +1,6 @@
 include LICENSE
 include README.rst
 include HISTORY.rst
-include pytest_rpc/data/*
 
 recursive-exclude * __pycache__
 recursive-exclude * *.py[co]
