@@ -192,19 +192,26 @@ def generate_random_string(string_length=10):
     return random_str[0:string_length]  # Return the random_str string.
 
 
-def get_expected_value(service_type, service_name, key, expected_value,
-                       run_on_host, retries=10):
+def get_expected_value(resource_type,
+                       resource_name,
+                       key,
+                       expected_value,
+                       run_on_host,
+                       retries=10,
+                       case_insensitive=True):
     """Getting an expected status after retries
 
     Args:
-        service_type (str): The OpenStack object type to query for.
-        service_name (str): The name of the OpenStack object instance to query
-                            for.
+        resource_type (str): The OpenStack object type to query for.
+        resource_name (str): The name of the OpenStack object instance to query
+            for.
         key (str): The OpenStack object instance parameter to check against.
         expected_value (str): The expected value for the given key.
         run_on_host (testinfra.Host): Testinfra host object to execute the
-                                      action on.
+            action on.
         retries (int): The maximum number of retry attempts.
+        case_insensitive (bool): Flag for controlling whether to match case
+            sensitive or not for the 'expected_value'.
 
     Returns:
         bool: Whether the expected value was found or not.
@@ -214,8 +221,9 @@ def get_expected_value(service_type, service_name, key, expected_value,
         sleep(6)
         cmd = (". ~/openrc ; "
                "openstack {} show \'{}\' "
-               "-f json".format(service_type, service_name))
+               "-f json".format(resource_type, resource_name))
         output = run_on_container(cmd, 'utility', run_on_host)
+
         try:
             result = json.loads(output.stdout)
         except ValueError as e:
@@ -224,6 +232,8 @@ def get_expected_value(service_type, service_name, key, expected_value,
 
         if key in result:
             if result[key] == expected_value:
+                return True
+            elif result[key].lower() == expected_value and case_insensitive:
                 return True
             else:
                 continue
@@ -236,6 +246,7 @@ def get_expected_value(service_type, service_name, key, expected_value,
     print("\ncmd = {}".format(cmd))
     print("\nOutput:\n {}".format(result))
     print("\n===== End of get_expected_value logs =====")
+
     return False
 
 
