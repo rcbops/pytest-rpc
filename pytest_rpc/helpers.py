@@ -246,7 +246,9 @@ def get_expected_value(resource_type,
 
     # Printing out logs if failed
     print("\n===== Debug: get_expected_value logs =====")
+    # noinspection PyUnboundLocalVariable
     print("\ncmd = {}".format(cmd))
+    # noinspection PyUnboundLocalVariable
     print("\nOutput:\n {}".format(result))
     print("\n===== End of get_expected_value logs =====")
 
