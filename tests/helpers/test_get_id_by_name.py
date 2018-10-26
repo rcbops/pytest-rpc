@@ -66,8 +66,9 @@ def test_no_id(mocker):
 
 
 def test_multiple_resources_with_same_name(mocker):
-    """Verify get_id_by_name returns ID value of a found resource  when OpenStack query
-    returns multiple resources."""
+    """Verify get_id_by_name returns ID value of a found resource when OpenStack
+     query returns multiple resources.
+     """
 
     data = """[{
                "Status": "available",
