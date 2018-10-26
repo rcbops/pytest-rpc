@@ -282,7 +282,8 @@ def create_instance(data, run_on_host):
                         "flavor": 'flavor',
                         "network_name": 'network',
                     }
-        run_on_host (testinfra.host.Host): A hostname where the command is being executed.
+        run_on_host (testinfra.host.Host): A hostname where the command is being
+            executed.
 
     Returns:
         str: The id of the created resource
@@ -291,10 +292,14 @@ def create_instance(data, run_on_host):
         AssertionError: If failed to create the resource
 
     Example:
-    `openstack server create --image <image_id> flavor <flavor> --nic <net-id=network_id> server/instance_name`
-    `openstack server create --snapshot <snapshot_id> flavor <flavor> --nic <net-id=network_id> server/instance_name`
+    `openstack server create --image <image_id> flavor <flavor> \
+        --nic <net-id=network_id> server/instance_name` \
+    `openstack server create --snapshot <snapshot_id> flavor <flavor> \
+        --nic <net-id=network_id> server/instance_name`
     """
-    source_id = get_id_by_name(data['from_source'], data['source_name'], run_on_host)
+    source_id = get_id_by_name(data['from_source'],
+                               data['source_name'],
+                               run_on_host)
     network_id = get_id_by_name('network', data['network_name'], run_on_host)
 
     cmd = (". ~/openrc ; "
