@@ -22,10 +22,12 @@ def test_expected_constructed_run_command(mocker):
     cmd = 'ls -al'
     container_type = 'swift'
 
-    wrapped_cmd = ". ~/openrc ; . /openstack/venvs/swift-*/bin/activate ; ls -al"
+    wrapped_cmd = \
+        ". ~/openrc ; . /openstack/venvs/swift-*/bin/activate ; ls -al"
     expected_run_cmd = ("lxc-attach -n $(lxc-ls -1 | grep {} | head -n 1) "
                         "-- bash -c '{}'".format(container_type, wrapped_cmd))
 
     result = pytest_rpc.helpers.run_on_swift(cmd, myhost)
+    # noinspection PyUnresolvedReferences
     myhost.run.assert_called_with(expected_run_cmd)
     assert result == command_result
