@@ -490,8 +490,10 @@ def create_floating_ip(network_name, run_on_host):
     """Create floating IP on a network
 
     Args:
-        network_name (str): The name of the OpenStack network object on which the floating IP is created.
-        run_on_host (testinfra.Host): Testinfra host object to execute the action on.
+        network_name (str): The name of the OpenStack network object on which
+            the floating IP is created.
+        run_on_host (testinfra.Host): Testinfra host object to execute the
+            action on.
 
     Returns:
         str: The newly created floating ip name
@@ -521,21 +523,22 @@ def create_floating_ip(network_name, run_on_host):
     return result[key]
 
 
-# What is the specific use case for pinging from utility container?
-# Is no specific use case identified, then this helper is not needed.
+# TODO: What is the specific use case for pinging from utility container?
+# TODO: Is no specific use case identified, then this helper is not needed.
 def ping_ip_from_utility_container(ip, run_on_host):
     """Verify the IP address can be pinged from utility container on a host
 
     Args:
         ip (str): The string of the pinged IP address
-        run_on_host (testinfra.Host): Testinfra host object to execute the action on.
+        run_on_host (testinfra.Host): Testinfra host object to execute the
+            action on.
 
     Returns:
         bool: Whether the IP address can be pinged or not
     """
 
     cmd = "ping -c1 {}".format(ip)
-    if (run_on_container(cmd, 'utility', run_on_host).rc == 0):
+    if run_on_container(cmd, 'utility', run_on_host).rc == 0:
         return True
     else:
         return False
