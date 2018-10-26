@@ -431,8 +431,10 @@ def create_snapshot_from_instance(snapshot_name, instance_name, run_on_host):
 
     Args:
         snapshot_name (str): The name of the OpenStack snapshot to be created.
-        instance_name (str): The name of the OpenStack instance from which the snapshot is created.
-        run_on_host (testinfra.Host): Testinfra host object to execute the action on.
+        instance_name (str): The name of the OpenStack instance from which the
+            snapshot is created.
+        run_on_host (testinfra.Host): Testinfra host object to execute the
+            action on.
 
     Returns:
         str: The id of the created resource
