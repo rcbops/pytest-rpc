@@ -396,10 +396,12 @@ def resource_not_in_the_list(service_type, service_name, run_on_host):
     Args:
         service_type (str): The OpenStack object type to query for.
         service_name (str): The name of the OpenStack object to query for.
-        run_on_host (testinfra.Host): Testinfra host object to execute the action on.
+        run_on_host (testinfra.Host): Testinfra host object to execute the
+            action on.
 
     Returns:
-        bool: True if the resource is NOT in the list, False if the resource is in the list
+        bool: True if the resource is NOT in the list, False if the resource is
+            in the list
     """
 
     return _resource_in_list(service_type, service_name, False, run_on_host)
