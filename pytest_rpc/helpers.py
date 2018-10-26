@@ -19,15 +19,15 @@ def get_osa_version(branch):
     """
 
     if branch in ['newton', 'newton-rc']:
-        return ('Newton', '14')
+        return 'Newton', '14'
     elif branch in ['pike', 'pike-rc']:
-        return ('Pike', '16')
+        return 'Pike', '16'
     elif branch in ['queens', 'queens-rc']:
-        return ('Queens', '17')
+        return 'Queens', '17'
     elif branch in ['rocky', 'rocky-rc']:
-        return ('Rocky', '18')
+        return 'Rocky', '18'
     else:
-        return ('', '')
+        return '', ''
 
 
 def get_id_by_name(service_type, service_name, run_on_host):
