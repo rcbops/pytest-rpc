@@ -141,7 +141,9 @@ def delete_volume(volume_name, run_on_host, addl_flags=''):
     Args:
         volume_name (str): OpenStack volume identifier (name or id).
         run_on_host (testinfra.Host): Testinfra host object to execute the
-                                      action on.
+            action on.
+        addl_flags (str): Add additional flags to the call to OpenStack CLI
+            when deleting a volume.
 
     Raises:
         AssertionError: If operation unsuccessful.
