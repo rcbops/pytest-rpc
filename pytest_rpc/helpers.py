@@ -412,7 +412,8 @@ def stop_server_instance(instance_name, run_on_host):
 
     Args:
         instance_name (str): The name of the OpenStack instance to be stopped.
-        run_on_host (testinfra.Host): Testinfra host object to execute the action on.
+        run_on_host (testinfra.Host): Testinfra host object to execute the
+            action on.
 
     Raises:
         AssertionError: If operation is unsuccessful.
