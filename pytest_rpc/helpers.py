@@ -468,7 +468,8 @@ def delete_it(service_type, service_name, run_on_host, addl_flags=''):
     Args:
         service_type (str): The OpenStack object type to query for.
         service_name (str): The name of the OpenStack object to query for.
-        run_on_host (testinfra.Host): Testinfra host object to execute the action on.
+        run_on_host (testinfra.Host): Testinfra host object to execute the
+            action on.
         addl_flags (str): Additional flags to pass to the openstack command
 
     Raises:
