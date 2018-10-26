@@ -52,7 +52,8 @@ def get_id_by_name(service_type, service_name, run_on_host):
         matches = [x for x in resources if x['Name'] == service_name]
     except (KeyError, TypeError):
         try:
-            matches = [x for x in resources if x['Display Name'] == service_name]
+            matches = [x for x in resources if x['Display Name']
+                       == service_name]
         except (KeyError, TypeError):
             return
 
