@@ -26,5 +26,6 @@ def test_expected_constructed_run_command(mocker):
                         "-- bash -c '{}'".format(container_type, cmd))
 
     result = pytest_rpc.helpers.run_on_container(cmd, container_type, myhost)
+    # noinspection PyUnresolvedReferences
     myhost.run.assert_called_with(expected_run_cmd)
     assert result == command_result
