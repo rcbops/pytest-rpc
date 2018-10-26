@@ -18,7 +18,8 @@ def test_get_resource_list_by_name(mocker):
     command_result.stdout = json.dumps([])
     mocker.patch('testinfra.host.Host.run', return_value=command_result)
 
-    assert type(pytest_rpc.helpers.get_resource_list_by_name('server', myhost)) == list
+    assert type(pytest_rpc.helpers.get_resource_list_by_name('server',
+                                                             myhost)) == list
 
 
 def test_get_resource_list_by_name_with_data(mocker):
@@ -49,5 +50,7 @@ def test_get_resource_list_by_name_with_data(mocker):
 
     volumes = pytest_rpc.helpers.get_resource_list_by_name('volume', myhost)
     assert volumes
+
+    # noinspection PyUnresolvedReferences
     assert '-f json' in myhost.run.call_args[0][0]
     assert 'delme' in [x['Name'] for x in volumes]
