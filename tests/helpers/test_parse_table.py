@@ -24,6 +24,7 @@ def test_table():
             'ACTIVE', 'UP', 'False', 'False',
             'ca37d49d3231475ba0d17d9efc043e09']
     row3 = ['', '', '', '', '', '', '']
+    # noinspection PyStringFormat
     table_str = """
                 +----+----+----+----+----+----+----+
                 | {} | {} | {} | {} | {} | {} | {} |
@@ -33,7 +34,8 @@ def test_table():
                 +----+----+----+----+----+----+----+
     """.format(*(headers + row1 + row2))
 
-    assert pytest_rpc.helpers.parse_table(table_str) == (headers, [row1, row2, row3])
+    assert pytest_rpc.helpers.parse_table(table_str) == \
+        (headers, [row1, row2, row3])
 
 
 def test_garbage():

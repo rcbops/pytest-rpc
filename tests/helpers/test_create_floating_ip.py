@@ -22,7 +22,9 @@ def test_floating_ip_created(mocker):
     mocker.patch('testinfra.host.Host.run', return_value=cr1)
     mocker.patch('pytest_rpc.helpers.get_id_by_name', return_value='network_id')
 
-    network = {'id': 'foo', 'floating_ip_address': '10.0.248.202', 'name': 'mynetwork'}
+    network = {'id': 'foo',
+               'floating_ip_address': '10.0.248.202',
+               'name': 'mynetwork'}
     cr1.rc = 0
     cr1.stdout = json.dumps(network)
 
@@ -60,7 +62,9 @@ def test_floating_ip_failure(mocker):
     mocker.patch('testinfra.host.Host.run', return_value=cr1)
     mocker.patch('pytest_rpc.helpers.get_id_by_name', return_value='network_id')
 
-    network = {'id': 'foo', 'floating_ip_address': '10.0.248.202', 'name': 'mynetwork'}
+    network = {'id': 'foo',
+               'floating_ip_address': '10.0.248.202',
+               'name': 'mynetwork'}
     cr1.rc = 2
     cr1.stdout = json.dumps(network)
 
