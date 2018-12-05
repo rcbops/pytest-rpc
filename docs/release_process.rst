@@ -20,7 +20,7 @@ project in production.
 
     make release-minor
 
-5. The task will stop and prompt you for you `PyPI`_ username and password if
+5. The task will stop and prompt you for your `PyPI`_ username and password if
    you dont have these set in your `.pypirc` file.
 
 6. Once the task has successfully completed you need to push the tag and
