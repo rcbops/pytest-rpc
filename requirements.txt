@@ -1,14 +1,13 @@
 -c constraints.txt
-tox
+bumpversion
 flake8
-python-dateutil
+ipython
 pytest
 pytest-cov
 pytest-mock
-lxml
+python-dateutil
 setuptools
-ipython
-bumpversion
-twine
 sh
 testinfra
+tox
+twine
