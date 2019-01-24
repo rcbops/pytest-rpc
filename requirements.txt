@@ -1,13 +1,16 @@
 -c constraints.txt
 bumpversion
+configparser
 flake8
 ipython
+paramiko
 pytest
 pytest-cov
 pytest-mock
 python-dateutil
 setuptools
 sh
+shade
 testinfra
 tox
 twine
