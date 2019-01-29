@@ -69,11 +69,11 @@ def openstack_properties():
         'private_key_path': '/root/.ssh/rpc_support',
         'security_group': 'rpc-support',
         'os_version_file_path': '/etc/openstack-release',
-        'os_version': None,
-        'os_version_major': None,
-        'os_version_minor': None,
-        'os_version_patch': None,
-        'os_version_codename': None
+        'os_version': "99.99.99",   # Indicates that the version is unset.
+        'os_version_major': 99,
+        'os_version_minor': 99,
+        'os_version_patch': 99,
+        'os_version_codename': 'master'  # Master branch for missing version
     }
 
     # Retrieve OpenStack version information
@@ -93,7 +93,7 @@ def openstack_properties():
             int(semantic_regex.match(os_properties['os_version']).group(2))
         os_properties['os_version_patch'] = \
             int(semantic_regex.match(os_properties['os_version']).group(3))
-    except (IOError, OSError, NoOptionError, NoSectionError):
+    except (IOError, OSError, NoOptionError, NoSectionError, AttributeError):
         warn(UserWarning("Failed to parse OpenStack version file!"))
 
     return os_properties
