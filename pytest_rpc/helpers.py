@@ -14,7 +14,6 @@ from subprocess import call
 # ==============================================================================
 # Helpers
 # ==============================================================================
-# TODO: Need to move this to 'pytest-rpc' eventually. (ASC-1412)
 def expect_os_property(os_api_conn,
                        os_service,
                        os_object,

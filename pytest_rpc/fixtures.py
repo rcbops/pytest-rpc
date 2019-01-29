@@ -11,8 +11,14 @@ from time import sleep
 from warnings import warn
 from paramiko import SSHClient, AutoAddPolicy, HostKeys
 from paramiko.ssh_exception import NoValidConnectionsError
-# noinspection PyCompatibility
-from configparser import ConfigParser, NoOptionError, NoSectionError
+
+# Shakes tiny fist at Python 2.7!
+try:
+    # noinspection PyCompatibility
+    from ConfigParser import ConfigParser, NoOptionError, NoSectionError
+except ImportError:
+    # noinspection PyCompatibility
+    from configparser import ConfigParser, NoOptionError, NoSectionError
 
 
 # ==============================================================================
