@@ -12,7 +12,12 @@ with open('HISTORY.rst') as history_file:
     history = history_file.read()
 
 python_requirements = '>=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*'
-requirements = ['pytest~=3.6', 'setuptools', 'sh']
+requirements = ['configparser',
+                'paramiko',
+                'pytest~=3.6',
+                'setuptools',
+                'sh',
+                'shade']
 packages = ['pytest_rpc']
 entry_points = {
     'pytest11': [
@@ -22,7 +27,7 @@ entry_points = {
 
 setup(
     name='pytest-rpc',
-    version='0.13.0',
+    version='1.0.0-dev0',
     author='rpc-automation',
     author_email='rpc-automation@rackspace.com',
     license='Apache Software License 2.0',
