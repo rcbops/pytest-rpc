@@ -13,7 +13,7 @@ def test_empty():
     result = pytest_rpc.helpers.parse_swift_ring_builder(ring_str)
 
     assert type(result) is dict
-    assert len(result) is 0
+    assert len(result) == 0
 
 
 def test_expected_output():
@@ -68,4 +68,4 @@ ipsum. Aliquam erat volutpat."""
     result = pytest_rpc.helpers.parse_swift_ring_builder(garbage)
 
     assert type(result) is dict
-    assert len(result) is 0
+    assert len(result) == 0
