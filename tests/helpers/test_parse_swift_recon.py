@@ -59,4 +59,4 @@ ipsum. Aliquam erat volutpat."""
     result = pytest_rpc.helpers.parse_swift_recon(garbage)
 
     assert type(result) is list
-    assert len(result) is 0
+    assert len(result) == 0

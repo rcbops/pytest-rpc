@@ -69,7 +69,8 @@ def openstack_properties():
         'private_key_path': '/root/.ssh/rpc_support',
         'security_group': 'rpc-support',
         'os_version_file_path': '/etc/openstack-release',
-        'os_version': "99.99.99",   # Indicates that the version is unset.
+        'os_version_ini_path': '/etc/openstack-release.ini',
+        'os_version': '99.99.99',   # Indicates that the version is unset.
         'os_version_major': 99,
         'os_version_minor': 99,
         'os_version_patch': 99,
@@ -78,15 +79,15 @@ def openstack_properties():
 
     # Retrieve OpenStack version information
     try:
-        os_version_file = ConfigParser()
-        os_version_file.read(unicode(os_properties['os_version_file_path']))
+        os_version_ini = ConfigParser()
+        os_version_ini.read(unicode(os_properties['os_version_ini_path']))
 
         # Extract OpenStack version semantics
         os_properties['os_version_codename'] = \
-            os_version_file.get('default', 'DISTRIB_CODENAME').replace('"', '')
+            os_version_ini.get('default', 'DISTRIB_CODENAME').replace('"', '')
         os_properties['os_version'] = \
-            os_version_file.get('default',
-                                'DISTRIB_RELEASE').replace('"', '').lstrip('r')
+            os_version_ini.get('default',
+                               'DISTRIB_RELEASE').replace('"', '').lstrip('r')
         os_properties['os_version_major'] = \
             int(semantic_regex.match(os_properties['os_version']).group(1))
         os_properties['os_version_minor'] = \
