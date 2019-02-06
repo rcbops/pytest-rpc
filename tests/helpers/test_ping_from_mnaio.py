@@ -34,4 +34,4 @@ def test_unsuccessful_ping(mocker):
     mocker.patch('pytest_rpc.helpers.call', autospec=True, return_value=1)
 
     # Test
-    assert pytest_rpc.helpers.ping_from_mnaio('fake_host', 0) is False
+    assert pytest_rpc.helpers.ping_from_mnaio('fake_host', 1) is False
