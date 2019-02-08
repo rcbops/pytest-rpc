@@ -9,6 +9,7 @@ import openstack
 import pytest_rpc.helpers as helpers
 from time import sleep
 from warnings import warn
+from openstack.exceptions import ConfigException
 from paramiko import SSHClient, AutoAddPolicy, HostKeys
 from paramiko.ssh_exception import NoValidConnectionsError
 
@@ -109,7 +110,14 @@ def os_api_conn():
         openstack.connection.Connection: https://bit.ly/2LqgiiT
     """
 
-    return openstack.connect(cloud='default')
+    err_msg = ('The "clouds.yaml" file not found! Most likely this failure '
+               'is caused by failing to apply the "ansible-role-pytest-rpc" '
+               'Ansible role (https://bit.ly/2UQDU42) to the OpenStack '
+               'infrastructure under test.')
+    try:
+        return openstack.connect(cloud='default')
+    except ConfigException:
+        pytest.fail(err_msg, True)
 
 
 @pytest.fixture
