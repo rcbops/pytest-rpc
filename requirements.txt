@@ -3,6 +3,7 @@ bumpversion
 configparser
 flake8
 ipython
+packaging
 paramiko
 pytest
 pytest-cov

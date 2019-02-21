@@ -9,6 +9,7 @@ from warnings import warn
 from pprint import pformat
 from platform import system
 from subprocess import call
+from packaging.version import Version, InvalidVersion
 
 
 # ==============================================================================
@@ -252,3 +253,26 @@ def parse_swift_ring_builder(ring_builder_output):
             swift_data[k] = float(v)
 
     return swift_data
+
+
+def get_cinder_major_version(run_on_host):
+    """ Retrieve cinder version number from utility container
+
+    Args:
+        run_on_host (testinfra.host.Host): Testinfra host fixture
+
+    Return:
+        int: cinder major version, -1 if lookup fails
+
+    """
+
+    cmd = '. openrc ; cinder --version'
+    result = run_on_container(cmd, 'utility', run_on_host)
+
+    try:
+        v = Version(result.stdout)
+        major = v.release[0]
+    except (InvalidVersion):
+        major = -1
+
+    return major
