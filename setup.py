@@ -13,7 +13,7 @@ with open('HISTORY.rst') as history_file:
 
 python_requirements = '>=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*'
 requirements = ['configparser',
-                'packaging',
+                'packaging~=18.0',
                 'paramiko',
                 'pytest~=3.6',
                 'setuptools',
